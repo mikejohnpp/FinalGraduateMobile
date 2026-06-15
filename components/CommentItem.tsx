@@ -61,8 +61,11 @@ export function CommentItem({ comment, postId, onReply, isReply = false }: Comme
           <Text className="text-sm">{comment.content}</Text>
         </View>
 
-        {/* Sentiment */}
-        <View className="mt-1 flex-row pl-1">
+        {/* Meta row — thời gian, sentiment, nút thích/phản hồi (inline như web) */}
+        <View className="mt-1 flex-row flex-wrap items-center gap-3 pl-1">
+          <Text variant="muted" className="text-xs">
+            {timeAgo(comment.createdAt)}
+          </Text>
           <SentimentIndicator
             data={{
               sentiment: comment.sentiment,
@@ -70,13 +73,6 @@ export function CommentItem({ comment, postId, onReply, isReply = false }: Comme
               cancelReason: comment.cancelReason,
             }}
           />
-        </View>
-
-        {/* Actions */}
-        <View className="mt-1 flex-row items-center gap-4 pl-1">
-          <Text variant="muted" className="text-xs">
-            {timeAgo(comment.createdAt)}
-          </Text>
           <Button
             variant="link"
             className="h-auto p-0"

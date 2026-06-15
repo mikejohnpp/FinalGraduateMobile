@@ -1,8 +1,9 @@
 // Màn hình Feed (bảng tin) — port từ web (src/views/home/Home.tsx + NewsFeed).
 import { useCallback } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { PostCard } from '@/components/PostCard';
 import { Text } from '@/components/ui/text';
 import { useLikePost, useSuggestedFeed } from '@/hooks/usePost';
@@ -32,11 +33,26 @@ export default function FeedScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-muted" edges={['top']}>
-      {/* Header */}
+      {/* Header — logo + lối tắt tìm kiếm, tạo bài, tin nhắn */}
       <View className="flex-row items-center justify-between bg-card px-4 py-3">
         <Text className="text-2xl font-extrabold text-primary">f</Text>
-        <Text variant="large">Bảng tin</Text>
-        <View className="w-6" />
+        <View className="flex-row items-center gap-1">
+          <Pressable
+            className="size-9 items-center justify-center rounded-full bg-muted active:opacity-70"
+            onPress={() => router.push('/search')}>
+            <Ionicons name="search" size={20} color="hsl(240, 5.9%, 10%)" />
+          </Pressable>
+          <Pressable
+            className="size-9 items-center justify-center rounded-full bg-muted active:opacity-70"
+            onPress={() => router.push('/(tabs)/create')}>
+            <Ionicons name="add" size={22} color="hsl(240, 5.9%, 10%)" />
+          </Pressable>
+          <Pressable
+            className="size-9 items-center justify-center rounded-full bg-muted active:opacity-70"
+            onPress={() => router.push('/(tabs)/messages')}>
+            <Ionicons name="chatbubble-ellipses-outline" size={20} color="hsl(240, 5.9%, 10%)" />
+          </Pressable>
+        </View>
       </View>
 
       <FlatList

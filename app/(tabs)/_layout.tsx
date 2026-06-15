@@ -6,27 +6,30 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarShowLabel: false,
         tabBarActiveTintColor: 'hsl(240, 5.9%, 10%)',
         tabBarInactiveTintColor: 'hsl(240, 3.8%, 46.1%)',
         tabBarStyle: {
           borderTopColor: 'hsl(240, 5.9%, 90%)',
         },
+        // Khi ẩn label, căn icon vào giữa theo chiều dọc.
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingVertical: 0,
+        },
+        tabBarIconStyle: {
+          flex: 1,
+          alignSelf: 'center',
+        },
       }}>
+
       <Tabs.Screen
         name="index"
         options={{
           title: 'Bảng tin',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="create"
-        options={{
-          title: 'Tạo bài',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="add-circle-outline" size={size} color={color} />
           ),
         }}
       />
@@ -39,16 +42,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="messages"
-        options={{
-          title: 'Tin nhắn',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="chatbubbles-outline" size={size} color={color} />
-          ),
-        }}
-      />
-
       <Tabs.Screen
         name="groups"
         options={{
@@ -76,6 +69,9 @@ export default function TabLayout() {
           ),
         }}
       />
+      {/* Các màn truy cập từ header bảng tin — ẩn khỏi tab bar */}
+      <Tabs.Screen name="create" options={{ href: null }} />
+      <Tabs.Screen name="messages" options={{ href: null }} />
       {/* Ẩn màn demo cũ khỏi tab bar */}
       <Tabs.Screen name="explore" options={{ href: null }} />
     </Tabs>
