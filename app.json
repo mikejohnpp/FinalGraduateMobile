@@ -32,6 +32,9 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       }
+    },
+    "extra": {
+      "serverApi": "http://localhost:8080"
     }
   }
 }

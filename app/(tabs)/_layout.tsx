@@ -11,33 +11,73 @@ export default function TabLayout() {
         tabBarStyle: {
           borderTopColor: 'hsl(240, 5.9%, 90%)',
         },
-      }}
-    >
+      }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
+          title: 'Bảng tin',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home-outline" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="create"
         options={{
-          title: 'Explore',
+          title: 'Tạo bài',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="compass-outline" size={size} color={color} />
+            <Ionicons name="add-circle-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="friends"
+        options={{
+          title: 'Bạn bè',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="people-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="messages"
+        options={{
+          title: 'Tin nhắn',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="chatbubbles-outline" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="groups"
+        options={{
+          title: 'Nhóm',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="grid-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Cá nhân',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
+          title: 'Cài đặt',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="settings-outline" size={size} color={color} />
           ),
         }}
       />
+      {/* Ẩn màn demo cũ khỏi tab bar */}
+      <Tabs.Screen name="explore" options={{ href: null }} />
     </Tabs>
   );
 }
