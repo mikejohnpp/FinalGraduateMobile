@@ -27,30 +27,6 @@ export default function SettingsScreen() {
           </View>
         )}
 
-        {/* Settings items */}
-        <View className="gap-3">
-          <View className="flex-row items-center justify-between rounded-lg border border-border bg-card p-4">
-            <View className="gap-1">
-              <Text variant="large">Thông báo</Text>
-              <Text variant="muted">Bật thông báo đẩy</Text>
-            </View>
-          </View>
-
-          <View className="flex-row items-center justify-between rounded-lg border border-border bg-card p-4">
-            <View className="gap-1">
-              <Text variant="large">Giao diện tối</Text>
-              <Text variant="muted">Bật chế độ tối</Text>
-            </View>
-          </View>
-
-          <View className="flex-row items-center justify-between rounded-lg border border-border bg-card p-4">
-            <View className="gap-1">
-              <Text variant="large">Ngôn ngữ</Text>
-              <Text variant="muted">Tiếng Việt</Text>
-            </View>
-          </View>
-        </View>
-
         <View className="mt-4">
           <Button variant="destructive" disabled={isLoading} onPress={logout}>
             <Text>{isLoading ? 'Đang đăng xuất...' : 'Đăng xuất'}</Text>

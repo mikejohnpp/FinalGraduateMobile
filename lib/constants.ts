@@ -26,11 +26,11 @@ export const USER_ID_KEY = 'user_id';
 
 
 export const API = {
-    REFRESH: 'api/auth/refresh-token',
-    LOGIN: 'api/auth/login',
-    LOGOUT: 'api/auth/logout',
-    REGISTER: 'api/auth/register',
-    ACTIVE: 'api/auth/active',
+    REFRESH: 'auth/refresh-token',
+    LOGIN: 'auth/login',
+    LOGOUT: 'auth/logout',
+    REGISTER: 'auth/register',
+    ACTIVE: 'auth/active',
 
     POST: {
         BASE: 'users/posts',
