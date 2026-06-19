@@ -57,9 +57,17 @@ export default function GroupDetailScreen() {
         </Text>
 
         {group?.isJoined ? (
-          <Button variant="secondary" disabled={actionLoading} onPress={() => leaveGroup(groupId)}>
-            <Text>Rời nhóm</Text>
-          </Button>
+          <View className="flex-row gap-2">
+            <Button className="flex-1" variant="secondary" disabled={actionLoading} onPress={() => leaveGroup(groupId)}>
+              <Text>Rời nhóm</Text>
+            </Button>
+            {group?.role === 'ADMIN' && (
+              <Button className="flex-1" variant="default" onPress={() => router.push(`/group/${groupId}/admin`)}>
+                <Ionicons name="settings-outline" size={16} color="white" />
+                <Text className="text-primary-foreground">Quản trị</Text>
+              </Button>
+            )}
+          </View>
         ) : group?.isPending ? (
           <Button variant="outline" disabled>
             <Text className="text-muted-foreground">Đang chờ duyệt</Text>
@@ -108,7 +116,11 @@ export default function GroupDetailScreen() {
         ListEmptyComponent={
           !postsLoading ? (
             <View className="items-center bg-card py-8">
-              <Text variant="muted">Chưa có bài viết nào trong nhóm.</Text>
+              <Text variant="muted">
+                {group?.privacy === 'private' && !group?.isJoined
+                  ? 'Đây là nhóm kín. Bạn cần tham gia để xem bài viết.'
+                  : 'Chưa có bài viết nào trong nhóm.'}
+              </Text>
             </View>
           ) : null
         }

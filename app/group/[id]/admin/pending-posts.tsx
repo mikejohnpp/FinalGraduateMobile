@@ -1,0 +1,98 @@
+import React from 'react';
+import { View, FlatList, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { Image } from 'expo-image';
+import { Button } from '@/components/ui/button';
+import { Text } from '@/components/ui/text';
+import { useGroupPendingPosts } from '@/hooks/useGroupAdmin';
+import { timeAgo } from '@/lib/time';
+
+export default function GroupAdminPendingPostsScreen() {
+    const { id } = useLocalSearchParams<{ id: string }>();
+    const router = useRouter();
+    const {
+        posts,
+        loading,
+        approvePost,
+        rejectPost,
+        loadMore,
+        hasNext,
+    } = useGroupPendingPosts(id);
+
+    const renderItem = ({ item }: { item: any }) => (
+        <View className="bg-card p-4 rounded-xl shadow-sm border border-border mb-3">
+            <View className="flex-row items-center gap-3 mb-3">
+                {item.authorAvatarUrl ? (
+                    <Image
+                        source={{ uri: item.authorAvatarUrl }}
+                        style={{ width: 40, height: 40, borderRadius: 20 }}
+                        contentFit="cover"
+                    />
+                ) : (
+                    <View className="size-10 rounded-full bg-muted items-center justify-center">
+                        <Text className="font-semibold text-muted-foreground">
+                            {item.authorName.charAt(0).toUpperCase()}
+                        </Text>
+                    </View>
+                )}
+                <View className="flex-1">
+                    <Text className="font-semibold">{item.authorName}</Text>
+                    <Text variant="small" className="text-muted-foreground">
+                        Đang chờ duyệt · {timeAgo(item.createdAt)}
+                    </Text>
+                </View>
+            </View>
+
+            <Text className="mb-4 text-foreground">{item.content}</Text>
+
+            <View className="flex-row gap-2 pt-3 border-t border-border">
+                <Button className="flex-1" onPress={() => approvePost(item.id)}>
+                    <Text className="text-primary-foreground">Phê duyệt</Text>
+                </Button>
+                <Button variant="outline" className="flex-1" onPress={() => rejectPost(item.id)}>
+                    <Text className="text-destructive">Từ chối</Text>
+                </Button>
+            </View>
+        </View>
+    );
+
+    return (
+        <SafeAreaView className="flex-1 bg-muted" edges={['top']}>
+            <Stack.Screen options={{ headerShown: false }} />
+            
+            {/* Header */}
+            <View className="flex-row items-center gap-3 border-b border-border bg-card px-4 py-2">
+                <Button variant="ghost" className="h-auto p-1" onPress={() => router.back()}>
+                    <Ionicons name="arrow-back" size={22} color="hsl(240, 5.9%, 10%)" />
+                </Button>
+                <Text variant="large">Bài viết chờ duyệt</Text>
+            </View>
+
+            <FlatList
+                data={posts}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={renderItem}
+                contentContainerClassName="p-4"
+                onEndReached={loadMore}
+                onEndReachedThreshold={0.5}
+                ListEmptyComponent={
+                    !loading ? (
+                        <View className="items-center py-10 opacity-70">
+                            <Ionicons name="document-text-outline" size={48} color="hsl(240, 3.8%, 46.1%)" className="mb-2" />
+                            <Text variant="large" className="text-muted-foreground">Không có bài viết chờ duyệt</Text>
+                        </View>
+                    ) : null
+                }
+                ListFooterComponent={
+                    loading ? (
+                        <View className="py-4 items-center">
+                            <ActivityIndicator />
+                        </View>
+                    ) : null
+                }
+            />
+        </SafeAreaView>
+    );
+}

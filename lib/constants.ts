@@ -66,4 +66,15 @@ export const API = {
     },
 
     SEARCH: 'users/search',
+
+    GROUP_ADMIN: {
+        INFO: 'users/groups',
+        STATS: 'users/groups',
+        MEMBER_REQUESTS: 'users/groups',
+        MEMBER_APPROVE: 'users/groups',
+        MEMBER_REJECT: 'users/groups',
+        PENDING_POSTS: 'users/groups',
+        POST_APPROVE: 'users/groups',
+        POST_REJECT: 'users/groups',
+    },
 };

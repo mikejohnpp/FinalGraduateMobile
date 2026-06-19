@@ -104,8 +104,8 @@ class Http {
         }
 
         if (status === 403) {
-            await storage.multiRemove([AUTH_TOKEN_NAME, USER_ID_KEY]);
-            onUnauthorized?.();
+            // Just reject, do not logout user for a resource forbidden error
+            return Promise.reject(error);
         }
 
         return Promise.reject(error);

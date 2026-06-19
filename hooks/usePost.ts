@@ -78,8 +78,10 @@ export function useCreatePost() {
         try {
             const result = await postService.createAndGetData<IPostDetails>(API.POST.BASE, data);
             if (result) {
-                const asPost: IPost = { ...result, commentCount: 0 };
-                dispatch(postActions.prependPost(asPost));
+                if (result.status !== 'PENDING') {
+                    const asPost: IPost = { ...result, commentCount: 0 };
+                    dispatch(postActions.prependPost(asPost));
+                }
             }
             return result;
         } catch (e: any) {

@@ -14,10 +14,17 @@ import type { IPost, IProfileUpdate, UserProfileDTO } from '@/types';
 export function useProfile(userId: number | string | undefined) {
     const dispatch = useAppDispatch();
     const currentUserId = useAppSelector((r) => r.user.userId);
+    const reduxProfile = useAppSelector((r) => r.user.profile);
     const [profile, setProfile] = useState<UserProfileDTO | null>(null);
     const [isOwner, setIsOwner] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (isOwner && reduxProfile) {
+            setProfile(reduxProfile);
+        }
+    }, [isOwner, reduxProfile]);
 
     const fetchProfile = useCallback(async () => {
         if (!userId) return;

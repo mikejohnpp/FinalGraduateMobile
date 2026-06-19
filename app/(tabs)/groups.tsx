@@ -3,7 +3,9 @@ import { useCallback } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { GroupCard } from '@/components/GroupCard';
+import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useGroupActions, useGroupsData } from '@/hooks/useGroup';
 import type { IGroup } from '@/types';
@@ -26,8 +28,11 @@ export default function GroupsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-muted" edges={['top']}>
-      <View className="bg-card px-4 py-3">
+      <View className="flex-row items-center justify-between bg-card px-4 py-2">
         <Text variant="large">Nhóm</Text>
+        <Button variant="ghost" className="h-auto p-2" onPress={() => router.push('/group/create')}>
+          <Ionicons name="add" size={24} color="hsl(240, 5.9%, 10%)" />
+        </Button>
       </View>
 
       <FlatList

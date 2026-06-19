@@ -1,5 +1,5 @@
 // PostCard — thẻ bài viết trên feed. Port ý tưởng từ web (src/components/PostCard.tsx).
-import { memo } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { View } from 'react-native';
 import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -13,12 +13,35 @@ import type { IPost } from '@/types';
 
 interface PostCardProps {
   post: IPost;
-  onToggleLike?: (post: IPost) => void;
+  onToggleLike?: (post: IPost) => Promise<boolean | void> | void;
   onComment?: (post: IPost) => void;
   likeDisabled?: boolean;
 }
 
 function PostCardBase({ post, onToggleLike, onComment, likeDisabled }: PostCardProps) {
+  const [liked, setLiked] = useState(post.hasLiked ?? false);
+  const [likesCount, setLikesCount] = useState(post.likeCount ?? 0);
+
+  useEffect(() => {
+    setLiked(post.hasLiked ?? false);
+    setLikesCount(post.likeCount ?? 0);
+  }, [post.hasLiked, post.likeCount]);
+
+  const handleToggleLikeLocal = async () => {
+    if (likeDisabled) return;
+    const wasLiked = liked;
+    setLiked(!wasLiked);
+    setLikesCount(prev => prev + (wasLiked ? -1 : 1));
+
+    if (onToggleLike) {
+      const success = await onToggleLike(post);
+      if (success === false) {
+        // Revert on failure
+        setLiked(wasLiked);
+        setLikesCount(prev => prev + (wasLiked ? 1 : -1));
+      }
+    }
+  };
   const avatarUri = resolveMediaUrl(post.author.avatar);
   const displayName = post.author.nickName || post.author.name;
 
@@ -65,7 +88,7 @@ function PostCardBase({ post, onToggleLike, onComment, likeDisabled }: PostCardP
       {/* Counters */}
       <View className="mb-1 flex-row items-center justify-between">
         <Text variant="muted" className="text-xs">
-          {post.likeCount} lượt thích
+          {likesCount} lượt thích
         </Text>
         <Text variant="muted" className="text-xs">
           {post.commentCount} bình luận
@@ -78,13 +101,13 @@ function PostCardBase({ post, onToggleLike, onComment, likeDisabled }: PostCardP
           variant="ghost"
           className="flex-1"
           disabled={likeDisabled}
-          onPress={() => onToggleLike?.(post)}>
+          onPress={handleToggleLikeLocal}>
           <Ionicons
-            name={post.hasLiked ? 'heart' : 'heart-outline'}
+            name={liked ? 'heart' : 'heart-outline'}
             size={20}
-            color={post.hasLiked ? 'hsl(0, 84.2%, 60.2%)' : 'hsl(240, 3.8%, 46.1%)'}
+            color={liked ? 'hsl(0, 84.2%, 60.2%)' : 'hsl(240, 3.8%, 46.1%)'}
           />
-          <Text className={post.hasLiked ? 'text-destructive' : 'text-muted-foreground'}>
+          <Text className={liked ? 'text-destructive' : 'text-muted-foreground'}>
             Thích
           </Text>
         </Button>

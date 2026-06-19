@@ -111,6 +111,7 @@ export interface IPost extends IBase {
     sentiment: string | null;
     confidence: number | null;
     cancelReason: string | null;
+    status?: string | null;
 }
 
 export interface IPostDetails extends IBase {
@@ -123,6 +124,7 @@ export interface IPostDetails extends IBase {
     sentiment: string | null;
     confidence: number | null;
     cancelReason: string | null;
+    status?: string | null;
 }
 
 export interface IPostCreate {
@@ -249,6 +251,53 @@ export interface MessageChat {
     totalElements: number;
 }
 
+// ---- Group Admin ----
+export interface IGroupAdmin {
+    id: number;
+    name: string;
+    avatarUrl?: string;
+    coverUrl?: string;
+    privacy: 'PUBLIC' | 'PRIVATE';
+    memberCount: number;
+    description?: string;
+    createdAt: string;
+    role: 'ADMIN' | 'MEMBER';
+}
 
+export interface IGroupStats {
+    pendingReviews: number;
+    reportedContent: number;
+    pendingPosts: number;
+    memberRequests: number;
+    groupStatusViolations: number;
+    moderationNotifications: number;
+    weeklyPosts: number;
+    weeklyPostsChange: number;
+    weeklyComments: number;
+    weeklyCommentsChange: number;
+    weeklyReactions: number;
+    weeklyReactionsChange: number;
+    activeMembers: number;
+    activeMembersChange: number;
+    weeklyActivity: { label: string; value: number }[];
+}
 
+export interface IGroupAdminMember {
+    id: number;
+    userId: number;
+    username: string;
+    avatarUrl?: string;
+    requestedAt: string;
+    gender?: 'MALE' | 'FEMALE' | 'OTHER';
+    joinedPlatformAt?: string;
+}
 
+export interface IGroupAdminPost {
+    id: number;
+    authorId: number;
+    authorName: string;
+    authorAvatarUrl?: string;
+    content: string;
+    createdAt: string;
+    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+}
