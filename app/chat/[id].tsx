@@ -17,6 +17,8 @@ import { useConversation, useSocketConnection } from '@/hooks/useChat';
 import { timeAgo } from '@/lib/time';
 import { useAppSelector } from '@/store/hooks';
 import type { ChatMessage } from '@/types';
+import { useWebRTC } from '@/hooks/useWebRTC';
+import Feather from '@expo/vector-icons/Feather';
 
 export default function ChatScreen() {
   // Đảm bảo socket được kết nối ngay cả khi mở thẳng màn này.
@@ -28,6 +30,7 @@ export default function ChatScreen() {
 
   const { chatInfo, messages, typingUsers, loading, send } = useConversation(conversationId);
   const userId = useAppSelector((r) => r.user.userId);
+  const { startCall } = useWebRTC();
 
   const [text, setText] = useState('');
 
@@ -39,6 +42,10 @@ export default function ChatScreen() {
 
   const title = chatInfo?.conversationName ?? 'Trò chuyện';
   const someoneTyping = typingUsers.filter((uid: number) => uid !== userId).length > 0;
+  
+  const otherMember = !chatInfo?.group && chatInfo?.members 
+    ? chatInfo.members.find((m: any) => m.id !== userId) || chatInfo.members[0] 
+    : undefined;
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -52,6 +59,16 @@ export default function ChatScreen() {
         <Text variant="large" numberOfLines={1} className="flex-1">
           {title}
         </Text>
+        {chatInfo?.group === false && otherMember && (
+          <View className="flex-row gap-1">
+            <Button variant="ghost" className="h-auto p-1" onPress={() => startCall(otherMember.id, conversationId, false)}>
+              <Feather name="phone" size={20} color="hsl(240, 5.9%, 10%)" />
+            </Button>
+            <Button variant="ghost" className="h-auto p-1" onPress={() => startCall(otherMember.id, conversationId, true)}>
+              <Feather name="video" size={20} color="hsl(240, 5.9%, 10%)" />
+            </Button>
+          </View>
+        )}
       </View>
 
       <KeyboardAvoidingView

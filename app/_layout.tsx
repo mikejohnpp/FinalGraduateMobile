@@ -46,14 +46,20 @@ function RootNavigator() {
   );
 }
 
+import { CallProvider } from '@/hooks/useWebRTC';
+import CallModal from '@/components/messenger/CallModal';
+
 export default function RootLayout() {
   return (
     <Provider store={store}>
-      <SafeAreaProvider>
-        <RootNavigator />
-        <StatusBar style="auto" />
-        <PortalHost />
-      </SafeAreaProvider>
+      <CallProvider>
+        <SafeAreaProvider>
+          <RootNavigator />
+          <StatusBar style="auto" />
+          <PortalHost />
+          <CallModal />
+        </SafeAreaProvider>
+      </CallProvider>
     </Provider>
   );
 }

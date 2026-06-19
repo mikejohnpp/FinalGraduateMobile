@@ -153,3 +153,34 @@ export function sendTypingIndicator(payload: {
         body: JSON.stringify(payload),
     });
 }
+
+export function sendCallSignal(type: string, payload: any): void {
+    if (!client?.connected) {
+        log('sendCallSignal skipped — not connected');
+        return;
+    }
+    client.publish({
+        destination: '/app/call.signal',
+        body: JSON.stringify({ type, payload }),
+    });
+}
+
+export function subscribeCallSignals(callback: (signal: any) => void): StompSubscription | null {
+    const destination = '/user/queue/call';
+    const key = destination;
+    desiredTopics.set(key, { destination, callback });
+    log('want subscribe', destination, 'connected=', client?.connected ?? false);
+    getClient();
+    applySubscriptions();
+    return liveSubs.get(key) ?? null;
+}
+
+export function unsubscribeCallSignals(): void {
+    const key = '/user/queue/call';
+    desiredTopics.delete(key);
+    const sub = liveSubs.get(key);
+    if (sub) {
+        sub.unsubscribe();
+        liveSubs.delete(key);
+    }
+}

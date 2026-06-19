@@ -15,35 +15,34 @@
 
   android = {
     enable = true;
-    ndk.enable = false;
-    # platforms.version = [ "32" "34" ];
-    # systemImageTypes = [ "google_apis_playstore" ];
-    # abis = [ "arm64-v8a" "x86_64" ];
-    # cmake.version = [ "3.22.1" ];
-    # cmdLineTools.version = "11.0";
-    # tools.version = "26.1.1";
-    # # platformTools.version defaults to latest from nixpkgs
-    # buildTools.version = [ "30.0.3" ];
-    # emulator = {
-    #   enable = true;
-    #   # version defaults to latest from nixpkgs
-    # };
-    # sources.enable = false;
-    # systemImages.enable = true;
-    # ndk.enable = true;
-    # googleAPIs.enable = true;
-    # googleTVAddOns.enable = true;
-    # extras = [ "extras;google;gcm" ];
-    # extraLicenses = [
-    #   "android-sdk-preview-license"
-    #   "android-googletv-license"
-    #   "android-sdk-arm-dbt-license"
-    #   "google-gdk-license"
-    #   "intel-android-extra-license"
-    #   "intel-android-sysimage-license"
-    #   "mips-android-sysimage-license"
-    # ];
     reactNative.enable = true;
+    platforms.version = [ "32" "34" "35" "36" ];
+    buildTools.version = [ "35.0.0" "36.0.0" ];
+    cmake.version = [ "3.22.1" ];
+    cmdLineTools.version = "11.0";
+    tools.version = "26.1.1";
+    
+    ndk = {
+      enable = true;
+      version = [ "27.1.12297006" ];
+    };
+    emulator = {
+       enable = true;
+     };
+    googleAPIs.enable = true;
+    googleTVAddOns.enable = true;
+    extras = [ "extras;google;gcm" ];
+    extraLicenses = [
+      "android-sdk-preview-license"
+      "android-googletv-license"
+      "android-sdk-arm-dbt-license"
+      "google-gdk-license"
+      "intel-android-extra-license"
+      "intel-android-sysimage-license"
+      "mips-android-sysimage-license"
+    ];
+    sources.enable = false;
+    systemImages.enable = true;
   };
 
   languages.javascript = {

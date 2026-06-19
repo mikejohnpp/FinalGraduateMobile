@@ -1,0 +1,346 @@
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import type { ReactNode } from 'react';
+import { RTCPeerConnection, RTCIceCandidate, RTCSessionDescription, mediaDevices, MediaStream } from 'react-native-webrtc';
+import { Audio } from 'expo-av';
+import { sendCallSignal, subscribeCallSignals, unsubscribeCallSignals } from '@/lib/chatSocket';
+import { useSelector } from 'react-redux';
+import type { RootState } from '@/store/store';
+import { Alert } from 'react-native';
+
+const ICE_SERVERS = [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' }
+];
+
+export type CallState = 'IDLE' | 'CALLING' | 'RINGING' | 'IN_CALL';
+
+interface CallContextType {
+    callState: CallState;
+    localStream: MediaStream | null;
+    remoteStream: MediaStream | null;
+    remoteUserId: number | null;
+    isAudioMuted: boolean;
+    isVideoMuted: boolean;
+    startCall: (toUserId: number, conversationId: number, isVideo?: boolean) => Promise<void>;
+    acceptCall: () => Promise<void>;
+    rejectCall: () => void;
+    hangup: () => void;
+    toggleMuteAudio: () => void;
+    toggleMuteVideo: () => void;
+}
+
+const CallContext = createContext<CallContextType | null>(null);
+
+export const CallProvider = ({ children }: { children: ReactNode }) => {
+    const [callState, setCallState] = useState<CallState>('IDLE');
+    const [remoteUserId, setRemoteUserId] = useState<number | null>(null);
+    const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+    const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+    const [isAudioMuted, setIsAudioMuted] = useState(false);
+    const [isVideoMuted, setIsVideoMuted] = useState(false);
+
+    const peerConnection = useRef<RTCPeerConnection | null>(null);
+    const localStreamRef = useRef<MediaStream | null>(null);
+    const remoteUserIdRef = useRef<number | null>(null);
+    const conversationIdRef = useRef<number | null>(null);
+    const callTypeRef = useRef<'AUDIO' | 'VIDEO'>('VIDEO');
+    const callStartTimeRef = useRef<number | null>(null);
+
+    const ringtoneAudio = useRef<Audio.Sound | null>(null);
+    const callingAudio = useRef<Audio.Sound | null>(null);
+
+    const currentUserId = useSelector((state: RootState) => state.user.userId);
+
+    useEffect(() => {
+        remoteUserIdRef.current = remoteUserId;
+    }, [remoteUserId]);
+
+    // Init sounds
+    useEffect(() => {
+        let isMounted = true;
+        (async () => {
+            try {
+                const { sound: ringtone } = await Audio.Sound.createAsync(
+                    require('../assets/sounds/ringtone.mp3'),
+                    { isLooping: true }
+                );
+                const { sound: calling } = await Audio.Sound.createAsync(
+                    require('../assets/sounds/calling.mp3'),
+                    { isLooping: true }
+                );
+                if (isMounted) {
+                    ringtoneAudio.current = ringtone;
+                    callingAudio.current = calling;
+                }
+            } catch (err) {
+                console.log('Error loading sounds', err);
+            }
+        })();
+
+        return () => {
+            isMounted = false;
+            ringtoneAudio.current?.unloadAsync();
+            callingAudio.current?.unloadAsync();
+        };
+    }, []);
+
+    // Play sounds
+    useEffect(() => {
+        if (callState === 'CALLING') {
+            callingAudio.current?.playAsync();
+        } else {
+            callingAudio.current?.stopAsync();
+        }
+
+        if (callState === 'RINGING') {
+            ringtoneAudio.current?.playAsync();
+        } else {
+            ringtoneAudio.current?.stopAsync();
+        }
+    }, [callState]);
+
+    const cleanup = useCallback(() => {
+        if (localStreamRef.current) {
+            localStreamRef.current.getTracks().forEach((track) => track.stop());
+        }
+        if (peerConnection.current) {
+            peerConnection.current.close();
+        }
+        setLocalStream(null);
+        setRemoteStream(null);
+        setCallState('IDLE');
+        setRemoteUserId(null);
+        remoteUserIdRef.current = null;
+        localStreamRef.current = null;
+        peerConnection.current = null;
+        conversationIdRef.current = null;
+        callStartTimeRef.current = null;
+    }, []);
+
+    useEffect(() => {
+        let timeoutId: NodeJS.Timeout;
+        if (callState === 'CALLING') {
+            timeoutId = setTimeout(() => {
+                Alert.alert('Cuộc gọi nhỡ', 'Người dùng không bắt máy.');
+                if (remoteUserIdRef.current && conversationIdRef.current) {
+                    sendCallSignal('HANGUP', {
+                        toUserId: remoteUserIdRef.current,
+                        conversationId: conversationIdRef.current,
+                        callType: callTypeRef.current,
+                        durationSeconds: 0,
+                    });
+                }
+                cleanup();
+            }, 60000);
+        }
+        return () => {
+            if (timeoutId) clearTimeout(timeoutId);
+        };
+    }, [callState, cleanup]);
+
+    const initPeerConnection = useCallback((remoteId: number) => {
+        if (peerConnection.current) {
+            peerConnection.current.close();
+        }
+        const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+        pc.onicecandidate = (event) => {
+            if (event.candidate) {
+                sendCallSignal('ICE', {
+                    toUserId: remoteId,
+                    candidate: event.candidate.candidate,
+                    sdpMid: event.candidate.sdpMid,
+                    sdpMLineIndex: event.candidate.sdpMLineIndex,
+                });
+            }
+        };
+        pc.ontrack = (event) => {
+            if (event.streams && event.streams[0]) {
+                setRemoteStream(event.streams[0]);
+            }
+        };
+        peerConnection.current = pc;
+        return pc;
+    }, []);
+
+    const startCall = async (toUserId: number, conversationId: number, isVideo: boolean = true) => {
+        setRemoteUserId(toUserId);
+        remoteUserIdRef.current = toUserId;
+        conversationIdRef.current = conversationId;
+        callTypeRef.current = isVideo ? 'VIDEO' : 'AUDIO';
+        setCallState('CALLING');
+
+        try {
+            const stream = await mediaDevices.getUserMedia({
+                video: isVideo,
+                audio: true,
+            }) as MediaStream;
+            setLocalStream(stream);
+            localStreamRef.current = stream;
+
+            const pc = initPeerConnection(toUserId);
+            stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+
+            const offer = await pc.createOffer({});
+            await pc.setLocalDescription(offer);
+
+            sendCallSignal('OFFER', {
+                toUserId,
+                sdpOffer: offer.sdp,
+                callType: isVideo ? 'VIDEO' : 'AUDIO',
+                conversationId,
+            });
+        } catch (error) {
+            console.error('Error accessing media devices.', error);
+            cleanup();
+        }
+    };
+
+    const acceptCall = async () => {
+        const currentRemoteId = remoteUserIdRef.current;
+        if (!peerConnection.current || !currentRemoteId) return;
+
+        setCallState('IN_CALL');
+        callStartTimeRef.current = Date.now();
+
+        try {
+            const stream = await mediaDevices.getUserMedia({
+                video: true,
+                audio: true,
+            }) as MediaStream;
+            setLocalStream(stream);
+            localStreamRef.current = stream;
+
+            stream.getTracks().forEach((track) => peerConnection.current?.addTrack(track, stream));
+
+            const answer = await peerConnection.current.createAnswer();
+            await peerConnection.current.setLocalDescription(answer);
+
+            sendCallSignal('ANSWER', {
+                toUserId: currentRemoteId,
+                sdpAnswer: answer.sdp,
+            });
+        } catch (error) {
+            console.error('Error accepting call.', error);
+            rejectCall();
+        }
+    };
+
+    const rejectCall = () => {
+        const currentRemoteId = remoteUserIdRef.current;
+        if (currentRemoteId) {
+            sendCallSignal('REJECT', {
+                toUserId: currentRemoteId,
+                conversationId: conversationIdRef.current,
+                callType: callTypeRef.current,
+                durationSeconds: 0,
+            });
+        }
+        cleanup();
+    };
+
+    const hangup = () => {
+        const currentRemoteId = remoteUserIdRef.current;
+        if (currentRemoteId) {
+            const durationSeconds = callStartTimeRef.current
+                ? Math.floor((Date.now() - callStartTimeRef.current) / 1000)
+                : 0;
+            sendCallSignal('HANGUP', {
+                toUserId: currentRemoteId,
+                conversationId: conversationIdRef.current,
+                callType: callTypeRef.current,
+                durationSeconds,
+            });
+        }
+        cleanup();
+    };
+
+    const toggleMuteAudio = () => {
+        if (localStreamRef.current) {
+            const audioTrack = localStreamRef.current.getAudioTracks()[0];
+            if (audioTrack) {
+                audioTrack.enabled = !audioTrack.enabled;
+                setIsAudioMuted(!audioTrack.enabled);
+            }
+        }
+    };
+
+    const toggleMuteVideo = () => {
+        if (localStreamRef.current) {
+            const videoTrack = localStreamRef.current.getVideoTracks()[0];
+            if (videoTrack) {
+                videoTrack.enabled = !videoTrack.enabled;
+                setIsVideoMuted(!videoTrack.enabled);
+            }
+        }
+    };
+
+    useEffect(() => {
+        const sub = subscribeCallSignals(async (signal) => {
+            const { type, payload } = signal;
+            if (payload.fromUserId === currentUserId) return;
+
+            switch (type) {
+                case 'OFFER': {
+                    const callerId = payload.fromUserId as number;
+                    setRemoteUserId(callerId);
+                    remoteUserIdRef.current = callerId;
+                    if (payload.conversationId) conversationIdRef.current = payload.conversationId as number;
+                    if (payload.callType) callTypeRef.current = payload.callType as 'AUDIO' | 'VIDEO';
+                    setCallState('RINGING');
+                    const pc = initPeerConnection(callerId);
+                    await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: payload.sdpOffer }));
+                    break;
+                }
+                case 'ANSWER':
+                    if (peerConnection.current) {
+                        await peerConnection.current.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: payload.sdpAnswer }));
+                        setCallState('IN_CALL');
+                        callStartTimeRef.current = Date.now();
+                    }
+                    break;
+                case 'ICE':
+                    if (peerConnection.current) {
+                        await peerConnection.current.addIceCandidate(new RTCIceCandidate({
+                            candidate: payload.candidate,
+                            sdpMid: payload.sdpMid,
+                            sdpMLineIndex: payload.sdpMLineIndex,
+                        }));
+                    }
+                    break;
+                case 'REJECT':
+                case 'HANGUP':
+                    cleanup();
+                    break;
+            }
+        });
+
+        return () => {
+            unsubscribeCallSignals();
+        };
+    }, [cleanup, currentUserId, initPeerConnection]);
+
+    const contextValue: CallContextType = {
+        callState,
+        localStream,
+        remoteStream,
+        remoteUserId,
+        isAudioMuted,
+        isVideoMuted,
+        startCall,
+        acceptCall,
+        rejectCall,
+        hangup,
+        toggleMuteAudio,
+        toggleMuteVideo,
+    };
+
+    return <CallContext.Provider value={contextValue}>{children}</CallContext.Provider>;
+};
+
+export const useWebRTC = () => {
+    const context = useContext(CallContext);
+    if (!context) {
+        throw new Error('useWebRTC must be used within a CallProvider');
+    }
+    return context;
+};
