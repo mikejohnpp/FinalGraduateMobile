@@ -24,7 +24,11 @@ export function GroupCard({ group, onPress, onJoin, onLeave, actionLoading }: Gr
         {coverUri ? (
           <Image source={{ uri: coverUri }} style={{ width: '100%', height: 120 }} contentFit="cover" />
         ) : (
-          <View className="h-28 w-full bg-muted" />
+          <View className="h-[120px] w-full items-center justify-center bg-muted">
+            <Text className="text-4xl font-bold uppercase text-muted-foreground">
+              {group.name?.charAt(0) || '?'}
+            </Text>
+          </View>
         )}
         <View className="gap-1 p-3">
           <Text className="font-semibold" numberOfLines={1}>

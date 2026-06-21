@@ -63,7 +63,11 @@ export default function UserProfileScreen() {
       {coverUri ? (
         <Image source={{ uri: coverUri }} style={{ width: '100%', height: 160 }} contentFit="cover" />
       ) : (
-        <View className="h-40 w-full bg-muted" />
+        <View className="h-40 w-full items-center justify-center bg-muted">
+          <Text className="text-5xl font-bold uppercase text-muted-foreground">
+            {displayName.charAt(0)}
+          </Text>
+        </View>
       )}
 
       {/* Avatar + name */}

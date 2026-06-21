@@ -61,11 +61,9 @@ export default function MessagesScreen() {
                 />
               ) : (
                 <View className="size-13 items-center justify-center rounded-full bg-muted" style={{ width: 52, height: 52 }}>
-                  <Ionicons
-                    name={item.group ? 'people' : 'person'}
-                    size={24}
-                    color="hsl(240, 3.8%, 46.1%)"
-                  />
+                  <Text className="text-xl font-bold uppercase text-muted-foreground">
+                    {name?.charAt(0) || '?'}
+                  </Text>
                 </View>
               )}
               <View className="flex-1">

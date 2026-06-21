@@ -130,7 +130,9 @@ export default function SearchScreen() {
                 />
               ) : (
                 <View className="size-11 items-center justify-center rounded-lg bg-muted">
-                  <Ionicons name="people" size={20} color="hsl(240, 3.8%, 46.1%)" />
+                  <Text className="font-semibold text-muted-foreground">
+                    {g.name.charAt(0).toUpperCase()}
+                  </Text>
                 </View>
               )}
               <View className="flex-1">

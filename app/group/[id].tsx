@@ -48,7 +48,11 @@ export default function GroupDetailScreen() {
       {coverUri ? (
         <Image source={{ uri: coverUri }} style={{ width: '100%', height: 160 }} contentFit="cover" />
       ) : (
-        <View className="h-40 w-full bg-muted" />
+        <View className="h-40 w-full items-center justify-center bg-muted">
+          <Text className="text-5xl font-bold uppercase text-muted-foreground">
+            {group?.name?.charAt(0) || '?'}
+          </Text>
+        </View>
       )}
       <View className="gap-2 p-4">
         <Text variant="h3">{group?.name}</Text>
