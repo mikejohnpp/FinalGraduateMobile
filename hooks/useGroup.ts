@@ -2,10 +2,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { API } from '@/lib/constants';
+import { uploadImageToSupabase } from '@/lib/mediaUpload';
 import groupService from '@/services/groupService';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { groupActions } from '@/store/groupSlice';
 import type { CursorPageResponse, IGroup, IPost } from '@/types';
+
 
 // useGroupsData — danh sách nhóm đã tham gia + gợi ý
 export function useGroupsData() {
@@ -239,3 +241,60 @@ export function useSingleGroupPosts(groupId: number) {
 
     return { posts, loading, error, hasMore, loadMore, refetch: () => fetchPosts(false) };
 }
+
+// useGroupImage — upload ảnh đại diện / ảnh bìa nhóm (chỉ ADMIN).
+// Nhận URI (từ image picker) + mimeType, upload lên Supabase rồi lưu link qua BE.
+export function useGroupImage() {
+    const userId = useAppSelector((r) => r.user.userId);
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const [uploadingCover, setUploadingCover] = useState(false);
+
+    const uploadAvatar = async (
+        groupId: number,
+        uri: string,
+        mimeType?: string | null,
+    ): Promise<IGroup | null> => {
+        if (!userId) return null;
+        setUploadingAvatar(true);
+        try {
+            const url = await uploadImageToSupabase(uri, mimeType);
+            const group = await groupService.updateGroupAvatar(groupId, userId, url);
+            if (group) Alert.alert('Thành công', 'Cập nhật ảnh đại diện nhóm thành công!');
+            return group;
+        } catch (e: any) {
+            Alert.alert(
+                'Lỗi',
+                e?.response?.data?.message || e?.message || 'Cập nhật ảnh đại diện thất bại',
+            );
+            return null;
+        } finally {
+            setUploadingAvatar(false);
+        }
+    };
+
+    const uploadCover = async (
+        groupId: number,
+        uri: string,
+        mimeType?: string | null,
+    ): Promise<IGroup | null> => {
+        if (!userId) return null;
+        setUploadingCover(true);
+        try {
+            const url = await uploadImageToSupabase(uri, mimeType);
+            const group = await groupService.updateGroupCover(groupId, userId, url);
+            if (group) Alert.alert('Thành công', 'Cập nhật ảnh bìa nhóm thành công!');
+            return group;
+        } catch (e: any) {
+            Alert.alert(
+                'Lỗi',
+                e?.response?.data?.message || e?.message || 'Cập nhật ảnh bìa thất bại',
+            );
+            return null;
+        } finally {
+            setUploadingCover(false);
+        }
+    };
+
+    return { uploadAvatar, uploadCover, uploadingAvatar, uploadingCover };
+}
+

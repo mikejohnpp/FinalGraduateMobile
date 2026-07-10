@@ -88,7 +88,7 @@ export default function SearchScreen() {
               </Text>
             );
           }
-          if (item.kind === 'user') {
+if (item.kind === 'user') {
             const u = item.data;
             const avatar = resolveMediaUrl(u.avatar);
             const name = u.nickName || u.name;
@@ -116,6 +116,7 @@ export default function SearchScreen() {
               </Pressable>
             );
           }
+
           const g = item.data;
           const avatar = resolveMediaUrl(g.avatar);
           return (

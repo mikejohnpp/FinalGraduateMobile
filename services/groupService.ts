@@ -85,6 +85,35 @@ export class GroupService extends BaseService {
         );
         return res.data ?? null;
     }
+
+    // Cập nhật ảnh đại diện nhóm (chỉ ADMIN) — BE chỉ lưu link Supabase.
+    async updateGroupAvatar(
+        groupId: number,
+        userId: number,
+        avatar: string,
+    ): Promise<IGroup | null> {
+        const res = await http.put<ApiResultGeneric<IGroup>>(
+            API.GROUP.AVATAR(groupId),
+            { avatar },
+            { params: { userId } },
+        );
+        return res.data ?? null;
+    }
+
+    // Cập nhật ảnh bìa nhóm (chỉ ADMIN) — BE chỉ lưu link Supabase.
+    async updateGroupCover(
+        groupId: number,
+        userId: number,
+        coverPhoto: string,
+    ): Promise<IGroup | null> {
+        const res = await http.put<ApiResultGeneric<IGroup>>(
+            API.GROUP.COVER(groupId),
+            { coverPhoto },
+            { params: { userId } },
+        );
+        return res.data ?? null;
+    }
 }
+
 
 export default new GroupService();

@@ -6,7 +6,9 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { SentimentIndicator } from '@/components/SentimentIndicator';
+import MediaGallery from '@/components/MediaGallery';
 import { useLikeComment, useReplies } from '@/hooks/useComment';
+
 import { resolveMediaUrl } from '@/lib/media';
 import { timeAgo } from '@/lib/time';
 import type { IComment } from '@/types';
@@ -21,6 +23,7 @@ interface CommentItemProps {
 export function CommentItem({ comment, postId, onReply, isReply = false }: CommentItemProps) {
   const avatarUri = resolveMediaUrl(comment.author.avatar);
   const displayName = comment.author.nickName || comment.author.name;
+
   const { like, unlike, loadingId } = useLikeComment(postId);
   const [showReplies, setShowReplies] = useState(false);
   const { replies, loaded, load, loadMore, hasMore } = useReplies(postId, comment.id);
@@ -56,10 +59,20 @@ export function CommentItem({ comment, postId, onReply, isReply = false }: Comme
 
       <View className="flex-1">
         {/* Bubble */}
-        <View className="self-start rounded-2xl bg-muted px-3 py-2">
-          <Text className="text-sm font-semibold">{displayName}</Text>
-          <Text className="text-sm">{comment.content}</Text>
-        </View>
+        {(!!comment.content || comment.media?.length > 0) && (
+          <View className="self-start rounded-2xl bg-muted px-3 py-2">
+            <Text className="text-sm font-semibold">{displayName}</Text>
+            {!!comment.content && <Text className="text-sm">{comment.content}</Text>}
+          </View>
+        )}
+
+        {/* Media của comment */}
+        {comment.media?.length > 0 && (
+          <View className="mt-1">
+            <MediaGallery media={comment.media} size="comment" />
+          </View>
+        )}
+
 
         {/* Meta row — thời gian, sentiment, nút thích/phản hồi (inline như web) */}
         <View className="mt-1 flex-row flex-wrap items-center gap-3 pl-1">

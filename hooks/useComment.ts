@@ -5,7 +5,14 @@ import { API } from '@/lib/constants';
 import commentService from '@/services/commentService';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { commentActions } from '@/store/commentSlice';
-import type { CursorPageResponse, IComment, ICommentCreate, ICommentUpdate } from '@/types';
+import type {
+    CursorPageResponse,
+    IComment,
+    ICommentCreate,
+    ICommentUpdate,
+    MediaInput,
+} from '@/types';
+
 
 // URL builders
 const commentUrl = (postId: number) => `${API.POST.BASE}/${postId}/${API.COMMENT.PATH}`;
@@ -120,8 +127,13 @@ export function useCreateComment(postId: number) {
     const [error, setError] = useState<string | null>(null);
 
     const create = useCallback(
-        async (content: string, parentId?: number | null): Promise<IComment | null> => {
-            if (!content.trim()) {
+        async (
+            content: string,
+            parentId?: number | null,
+            media?: MediaInput[] | null,
+        ): Promise<IComment | null> => {
+            const hasMedia = !!media && media.length > 0;
+            if (!content.trim() && !hasMedia) {
                 setError('Nội dung bình luận không được để trống');
                 return null;
             }
@@ -129,7 +141,13 @@ export function useCreateComment(postId: number) {
             setError(null);
             setLoading(true);
             try {
-                const body: ICommentCreate = { userId, content: content.trim(), parentId };
+                const body: ICommentCreate = {
+                    userId,
+                    content: content.trim(),
+                    parentId,
+                    ...(hasMedia ? { media } : {}),
+                };
+
                 const result = await commentService.createAndGetData<IComment>(
                     commentUrl(postId),
                     body,

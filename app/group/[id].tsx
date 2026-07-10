@@ -8,22 +8,27 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { PostCard } from '@/components/PostCard';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
-import { useGroupActions, useGroupDetail, useSingleGroupPosts } from '@/hooks/useGroup';
+import { useGroupActions, useGroupDetail, useGroupImage, useSingleGroupPosts } from '@/hooks/useGroup';
 import { useLikePost } from '@/hooks/usePost';
+import { pickImageWithMeta } from '@/lib/imagePicker';
 import { resolveMediaUrl } from '@/lib/media';
 import { useAppSelector } from '@/store/hooks';
 import type { IPost } from '@/types';
+
 
 export default function GroupDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const groupId = Number(id);
   const router = useRouter();
 
-  const { group, loading } = useGroupDetail(groupId);
+  const { group, loading, setGroup } = useGroupDetail(groupId);
   const { posts, loadMore, loading: postsLoading } = useSingleGroupPosts(groupId);
   const { joinGroup, leaveGroup, loading: actionLoading } = useGroupActions();
   const { like, unlike, loadingId } = useLikePost();
+  const { uploadAvatar, uploadCover, uploadingAvatar, uploadingCover } = useGroupImage();
   const userId = useAppSelector((r) => r.user.userId);
+
+  const isAdmin = group?.role === 'ADMIN';
 
   const handleToggleLike = useCallback(
     (post: IPost) => {
@@ -33,6 +38,21 @@ export default function GroupDetailScreen() {
     [userId, like, unlike],
   );
 
+  const handleChangeCover = useCallback(async () => {
+    const picked = await pickImageWithMeta([16, 9]);
+    if (!picked) return;
+    const updated = await uploadCover(groupId, picked.uri, picked.mimeType);
+    if (updated) setGroup(updated);
+  }, [groupId, uploadCover, setGroup]);
+
+  const handleChangeAvatar = useCallback(async () => {
+    const picked = await pickImageWithMeta([1, 1]);
+    if (!picked) return;
+    const updated = await uploadAvatar(groupId, picked.uri, picked.mimeType);
+    if (updated) setGroup(updated);
+  }, [groupId, uploadAvatar, setGroup]);
+
+
   if (loading && !group) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-background">
@@ -41,20 +61,63 @@ export default function GroupDetailScreen() {
     );
   }
 
-  const coverUri = resolveMediaUrl(group?.coverPhoto || group?.avatar);
+  const coverUri = resolveMediaUrl(group?.coverPhoto);
+  const avatarUri = resolveMediaUrl(group?.avatar);
 
   const header = (
     <View className="bg-card">
-      {coverUri ? (
-        <Image source={{ uri: coverUri }} style={{ width: '100%', height: 160 }} contentFit="cover" />
-      ) : (
-        <View className="h-40 w-full items-center justify-center bg-muted">
-          <Text className="text-5xl font-bold uppercase text-muted-foreground">
-            {group?.name?.charAt(0) || '?'}
-          </Text>
+      <View>
+        {coverUri ? (
+          <Image source={{ uri: coverUri }} style={{ width: '100%', height: 160 }} contentFit="cover" />
+        ) : (
+          <View className="h-40 w-full bg-muted" />
+        )}
+        {/* Nút đổi ảnh bìa — chỉ ADMIN */}
+        {isAdmin && (
+          <Button
+            variant="secondary"
+            className="absolute bottom-2 right-2 h-9 flex-row gap-1 rounded-full px-3 opacity-90"
+            disabled={uploadingCover}
+            onPress={handleChangeCover}>
+            {uploadingCover ? (
+              <ActivityIndicator size="small" />
+            ) : (
+              <Ionicons name="camera-outline" size={16} color="hsl(240, 5.9%, 10%)" />
+            )}
+            <Text className="text-xs">Ảnh bìa</Text>
+          </Button>
+        )}
+      </View>
+      <View className="gap-2 px-4 pb-4">
+        {/* Avatar nhóm — đè một phần lên ảnh bìa */}
+        <View className="-mt-11 self-start">
+          <View className="size-[88px] overflow-hidden rounded-full border-4 border-card bg-muted">
+            {avatarUri ? (
+              <Image source={{ uri: avatarUri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+            ) : (
+              <View className="flex-1 items-center justify-center bg-muted">
+                <Text className="text-3xl font-bold uppercase text-muted-foreground">
+                  {group?.name?.charAt(0) || '?'}
+                </Text>
+              </View>
+            )}
+          </View>
+          {/* Nút đổi ảnh đại diện — chỉ ADMIN */}
+          {isAdmin && (
+            <Button
+              variant="secondary"
+              className="absolute bottom-0 right-0 size-9 items-center justify-center rounded-full border-2 border-card p-0"
+              disabled={uploadingAvatar}
+              onPress={handleChangeAvatar}>
+              {uploadingAvatar ? (
+                <ActivityIndicator size="small" />
+              ) : (
+                <Ionicons name="camera" size={16} color="hsl(240, 5.9%, 10%)" />
+              )}
+            </Button>
+          )}
         </View>
-      )}
-      <View className="gap-2 p-4">
+
         <Text variant="h3">{group?.name}</Text>
         <Text variant="muted" className="text-sm">
           {group?.privacy === 'public' ? 'Công khai' : 'Riêng tư'} · {group?.memberCount} thành viên

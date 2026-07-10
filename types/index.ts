@@ -34,6 +34,26 @@ export interface IBase {
     id: number;
 }
 
+// ---- Media (ảnh/video/file cho post & comment) ----
+// Port từ web (src/types/interfaces/media/IMedia.ts).
+export type MediaType = 'IMAGE' | 'VIDEO' | 'AUDIO' | 'FILE';
+
+// Item media khi TẠO/SỬA post & comment. url bắt buộc; mediaType/position tuỳ chọn.
+export interface MediaInput {
+    url: string;
+    mediaType?: MediaType;
+    position?: number;
+}
+
+// Item media trả về trong response (đã sort theo position). Nếu không có → [].
+export interface MediaItem {
+    id: number;
+    url: string;
+    mediaType: MediaType;
+    position: number;
+}
+
+
 // ---- Auth ----
 export interface TokenResult {
     token: string;
@@ -108,6 +128,7 @@ export interface IPost extends IBase {
         name: string;
         avatar: string | null;
     };
+    media: MediaItem[];
     sentiment: string | null;
     confidence: number | null;
     cancelReason: string | null;
@@ -121,6 +142,7 @@ export interface IPostDetails extends IBase {
     content: string;
     likeCount: number;
     hasLiked?: boolean;
+    media: MediaItem[];
     sentiment: string | null;
     confidence: number | null;
     cancelReason: string | null;
@@ -132,11 +154,16 @@ export interface IPostCreate {
     content: string;
     isGroupPosted?: boolean;
     groupId?: number | null;
+    // Tuỳ chọn: bỏ field / null / [] đều hợp lệ khi tạo.
+    media?: MediaInput[] | null;
 }
 
 export interface IPostUpdate {
     content: string;
+    // Quy tắc BE: null = giữ nguyên media cũ, [] = xoá hết, có phần tử = thay thế toàn bộ.
+    media?: MediaInput[] | null;
 }
+
 
 // ---- Comment ----
 export interface IComment {
@@ -145,6 +172,7 @@ export interface IComment {
     postId: number;
     parentId: number | null; // null = comment gốc, có ID = reply
     content: string;
+    media: MediaItem[];
     likeCount: number;
     replyCount: number;
     liked: boolean;
@@ -158,11 +186,16 @@ export interface ICommentCreate {
     userId: number;
     content: string;
     parentId?: number | null;
+    // Tuỳ chọn: bỏ field / null / [] đều hợp lệ khi tạo.
+    media?: MediaInput[] | null;
 }
 
 export interface ICommentUpdate {
     content: string;
+    // Quy tắc BE: null = giữ nguyên media cũ, [] = xoá hết, có phần tử = thay thế toàn bộ.
+    media?: MediaInput[] | null;
 }
+
 
 // ---- Friend ----
 export interface IFriendship {

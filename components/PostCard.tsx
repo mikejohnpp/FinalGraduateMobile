@@ -6,7 +6,9 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { SentimentIndicator } from '@/components/SentimentIndicator';
+import MediaGallery from '@/components/MediaGallery';
 import { resolveMediaUrl } from '@/lib/media';
+
 import { timeAgo } from '@/lib/time';
 import type { IPost } from '@/types';
 
@@ -44,6 +46,7 @@ function PostCardBase({ post, onToggleLike, onComment, likeDisabled }: PostCardP
   };
   const avatarUri = resolveMediaUrl(post.author.avatar);
   const displayName = post.author.nickName || post.author.name;
+
 
   return (
     <View className="bg-card px-4 py-3">
@@ -85,7 +88,15 @@ function PostCardBase({ post, onToggleLike, onComment, likeDisabled }: PostCardP
       {/* Content */}
       {!!post.content && <Text className="mb-3 leading-6">{post.content}</Text>}
 
+      {/* Media (ảnh/video/file) */}
+      {post.media?.length > 0 && (
+        <View className="mb-3">
+          <MediaGallery media={post.media} size="post" />
+        </View>
+      )}
+
       {/* Counters */}
+
       <View className="mb-1 flex-row items-center justify-between">
         <Text variant="muted" className="text-xs">
           {likesCount} lượt thích

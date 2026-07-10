@@ -43,7 +43,11 @@ export const API = {
         JOINED: 'users/groups/joined',
         SUGGESTED: 'users/groups/suggested',
         FEED: 'users/groups/posts/feed',
+        // Cập nhật ảnh nhóm (chỉ ADMIN) — BE chỉ lưu link Supabase.
+        AVATAR: (groupId: number) => `users/groups/${groupId}/avatar`,
+        COVER: (groupId: number) => `users/groups/${groupId}/cover`,
     },
+
 
     COMMENT: {
         PATH: 'comments',

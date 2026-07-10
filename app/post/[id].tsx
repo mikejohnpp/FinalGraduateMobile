@@ -12,9 +12,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { CommentItem } from '@/components/CommentItem';
+import MediaDraftPicker from '@/components/MediaDraftPicker';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useComments, useCreateComment } from '@/hooks/useComment';
+import { useMediaUpload } from '@/hooks/useMediaUpload';
 import type { IComment } from '@/types';
 
 export default function PostDetailScreen() {
@@ -24,18 +26,25 @@ export default function PostDetailScreen() {
 
   const { comments, loading, loadMore } = useComments(postId);
   const { create, loading: sending } = useCreateComment(postId);
+  const { drafts, uploading, hasMedia, pickAndAdd, removeDraft, clear, upload } = useMediaUpload();
 
   const [text, setText] = useState('');
   const [replyTo, setReplyTo] = useState<IComment | null>(null);
 
+  const busy = sending || uploading;
+  const canSend = (text.trim().length > 0 || hasMedia) && !busy;
+
   const handleSend = useCallback(async () => {
-    if (!text.trim()) return;
-    const result = await create(text, replyTo?.id ?? null);
+    if (!canSend) return;
+    const media = await upload();
+    if (media === null) return; // upload lỗi (Alert đã hiển thị trong hook)
+    const result = await create(text, replyTo?.id ?? null, media.length > 0 ? media : null);
     if (result) {
       setText('');
       setReplyTo(null);
+      clear();
     }
-  }, [text, replyTo, create]);
+  }, [canSend, upload, create, text, replyTo, clear]);
 
   const handleReply = useCallback((comment: IComment) => {
     setReplyTo(comment);
@@ -90,12 +99,34 @@ export default function PostDetailScreen() {
               <Text variant="muted" className="text-xs">
                 Đang phản hồi {replyTo.author.nickName || replyTo.author.name}
               </Text>
+
               <Button variant="link" className="h-auto p-0" onPress={() => setReplyTo(null)}>
                 <Text className="text-xs text-muted-foreground">Huỷ</Text>
               </Button>
             </View>
           )}
+
+          {/* Preview media đã chọn */}
+          {drafts.length > 0 && (
+            <View className="mb-2">
+              <MediaDraftPicker
+                drafts={drafts}
+                onPick={pickAndAdd}
+                onRemove={removeDraft}
+                disabled={busy}
+                variant="icon"
+              />
+            </View>
+          )}
+
           <View className="flex-row items-center gap-2">
+            <MediaDraftPicker
+              drafts={[]}
+              onPick={pickAndAdd}
+              onRemove={removeDraft}
+              disabled={busy}
+              variant="icon"
+            />
             <TextInput
               className="h-11 flex-1 rounded-full border border-input bg-muted px-4 text-foreground"
               placeholder="Viết bình luận..."
@@ -103,16 +134,17 @@ export default function PostDetailScreen() {
               value={text}
               onChangeText={setText}
               multiline
+              editable={!busy}
             />
             <Button
               variant="ghost"
               className="h-auto p-2"
-              disabled={sending || !text.trim()}
+              disabled={!canSend}
               onPress={handleSend}>
               <Ionicons
                 name="send"
                 size={22}
-                color={text.trim() ? 'hsl(240, 5.9%, 10%)' : 'hsl(240, 3.8%, 46.1%)'}
+                color={canSend ? 'hsl(240, 5.9%, 10%)' : 'hsl(240, 3.8%, 46.1%)'}
               />
             </Button>
           </View>

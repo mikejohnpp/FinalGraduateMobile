@@ -1,7 +1,9 @@
-// Tiện ích chọn ảnh từ thư viện, xin quyền và trả về URI (hoặc null nếu huỷ/không có quyền).
+// Tiện ích chọn ảnh/media từ thư viện, xin quyền và trả về URI (hoặc null nếu huỷ/không có quyền).
 import * as ImagePicker from 'expo-image-picker';
 import { Alert } from 'react-native';
+import { inferMediaType, type PickedMedia } from '@/lib/mediaUpload';
 
+// Chọn 1 ảnh (dùng cho avatar/cover). Trả về URI hoặc null.
 export async function pickImage(aspect?: [number, number]): Promise<string | null> {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
@@ -18,4 +20,56 @@ export async function pickImage(aspect?: [number, number]): Promise<string | nul
 
     if (result.canceled || !result.assets?.length) return null;
     return result.assets[0].uri;
+}
+
+// Chọn 1 ảnh kèm metadata (URI + mimeType + fileName) — dùng cho avatar/cover nhóm.
+export async function pickImageWithMeta(
+    aspect?: [number, number],
+): Promise<{ uri: string; mimeType?: string | null; fileName?: string | null } | null> {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+        Alert.alert('Cần quyền truy cập', 'Hãy cấp quyền truy cập thư viện ảnh để tiếp tục.');
+        return null;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect,
+        quality: 0.8,
+    });
+
+    if (result.canceled || !result.assets?.length) return null;
+    const asset = result.assets[0];
+    return { uri: asset.uri, mimeType: asset.mimeType, fileName: asset.fileName };
+}
+
+// Chọn nhiều media (ảnh/video) cho post & comment. Trả về danh sách PickedMedia.
+export async function pickMedia(selectionLimit = 10): Promise<PickedMedia[]> {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+        Alert.alert('Cần quyền truy cập', 'Hãy cấp quyền truy cập thư viện ảnh để tiếp tục.');
+        return [];
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images', 'videos'],
+        allowsMultipleSelection: true,
+        selectionLimit,
+        quality: 0.8,
+    });
+
+    if (result.canceled || !result.assets?.length) return [];
+
+    return result.assets.map((asset) => {
+        const mediaType =
+            asset.type === 'video' ? 'VIDEO' : inferMediaType(asset.mimeType ?? 'image/jpeg');
+        return {
+            uri: asset.uri,
+            mediaType,
+            fileName: asset.fileName,
+            mimeType: asset.mimeType,
+            fileSize: asset.fileSize,
+        } satisfies PickedMedia;
+    });
 }
