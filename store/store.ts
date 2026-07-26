@@ -6,6 +6,9 @@ import commentReducer from '@/store/commentSlice';
 import friendReducer from '@/store/friendSlice';
 import groupReducer from '@/store/groupSlice';
 import chatReducer from '@/store/chatSlice';
+import notificationReducer from '@/store/notificationSlice';
+import storyReducer from '@/store/storySlice';
+import reelReducer from '@/store/reelSlice';
 
 export const store = configureStore({
     reducer: {
@@ -15,6 +18,9 @@ export const store = configureStore({
         friend: friendReducer,
         group: groupReducer,
         chat: chatReducer,
+        notification: notificationReducer,
+        story: storyReducer,
+        reel: reelReducer,
     },
 });
 

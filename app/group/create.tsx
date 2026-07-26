@@ -6,8 +6,10 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useGroupActions } from '@/hooks/useGroup';
+import { useThemeColors } from '@/hooks/useTheme';
 
 export default function CreateGroupScreen() {
+  const colors = useThemeColors();
     const router = useRouter();
     const { createGroup, loading } = useGroupActions();
     
@@ -36,7 +38,7 @@ export default function CreateGroupScreen() {
             
             <View className="flex-row items-center justify-between border-b border-border bg-card px-4 py-2">
                 <Button variant="ghost" className="h-auto p-1" onPress={() => router.back()}>
-                    <Ionicons name="close" size={24} color="hsl(240, 5.9%, 10%)" />
+                    <Ionicons name="close" size={24} color={colors.foreground} />
                 </Button>
                 <Text variant="large" className="font-semibold">Tạo nhóm</Text>
                 <Button 
@@ -46,7 +48,7 @@ export default function CreateGroupScreen() {
                     onPress={handleCreate}
                 >
                     {loading ? (
-                        <ActivityIndicator size="small" color="hsl(240, 5.9%, 10%)" />
+                        <ActivityIndicator size="small" color={colors.foreground} />
                     ) : (
                         <Text className={!name.trim() ? "text-muted-foreground" : "text-primary font-semibold"}>
                             Tạo
@@ -76,7 +78,7 @@ export default function CreateGroupScreen() {
                             onPress={() => setPrivacy('public')}
                         >
                             <View className={`rounded-full p-2 ${privacy === 'public' ? 'bg-primary' : 'bg-muted'}`}>
-                                <Ionicons name="earth" size={24} color={privacy === 'public' ? 'white' : 'hsl(240, 3.8%, 46.1%)'} />
+                                <Ionicons name="earth" size={24} color={privacy === 'public' ? 'white' : colors.mutedForeground} />
                             </View>
                             <View className="flex-1">
                                 <Text className={`font-semibold text-base ${privacy === 'public' ? 'text-primary' : 'text-foreground'}`}>Công khai</Text>
@@ -92,7 +94,7 @@ export default function CreateGroupScreen() {
                             onPress={() => setPrivacy('private')}
                         >
                             <View className={`rounded-full p-2 ${privacy === 'private' ? 'bg-primary' : 'bg-muted'}`}>
-                                <Ionicons name="lock-closed" size={24} color={privacy === 'private' ? 'white' : 'hsl(240, 3.8%, 46.1%)'} />
+                                <Ionicons name="lock-closed" size={24} color={privacy === 'private' ? 'white' : colors.mutedForeground} />
                             </View>
                             <View className="flex-1">
                                 <Text className={`font-semibold text-base ${privacy === 'private' ? 'text-primary' : 'text-foreground'}`}>Riêng tư</Text>

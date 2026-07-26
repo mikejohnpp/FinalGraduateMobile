@@ -9,8 +9,10 @@ import MediaDraftPicker from '@/components/MediaDraftPicker';
 import { useCreatePost } from '@/hooks/usePost';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
 import { useAppSelector } from '@/store/hooks';
+import { useThemeColors } from '@/hooks/useTheme';
 
 export default function CreatePostScreen() {
+  const colors = useThemeColors();
   const [content, setContent] = useState('');
   const { create, loading, error } = useCreatePost();
   const { drafts, uploading, hasMedia, pickAndAdd, removeDraft, clear, upload } = useMediaUpload();
@@ -70,7 +72,7 @@ export default function CreatePostScreen() {
           <TextInput
             className="min-h-[120px] text-base text-foreground"
             placeholder="Bạn đang nghĩ gì?"
-            placeholderTextColor="hsl(240, 3.8%, 46.1%)"
+            placeholderTextColor={colors.mutedForeground}
             value={content}
             onChangeText={setContent}
             multiline

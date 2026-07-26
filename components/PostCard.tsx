@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { SentimentIndicator } from '@/components/SentimentIndicator';
 import MediaGallery from '@/components/MediaGallery';
+import { useThemeColors } from '@/hooks/useTheme';
 import { resolveMediaUrl } from '@/lib/media';
 
 import { timeAgo } from '@/lib/time';
@@ -21,6 +22,7 @@ interface PostCardProps {
 }
 
 function PostCardBase({ post, onToggleLike, onComment, likeDisabled }: PostCardProps) {
+  const colors = useThemeColors();
   const [liked, setLiked] = useState(post.hasLiked ?? false);
   const [likesCount, setLikesCount] = useState(post.likeCount ?? 0);
 
@@ -116,14 +118,14 @@ function PostCardBase({ post, onToggleLike, onComment, likeDisabled }: PostCardP
           <Ionicons
             name={liked ? 'heart' : 'heart-outline'}
             size={20}
-            color={liked ? 'hsl(0, 84.2%, 60.2%)' : 'hsl(240, 3.8%, 46.1%)'}
+            color={liked ? colors.destructive : colors.mutedForeground}
           />
           <Text className={liked ? 'text-destructive' : 'text-muted-foreground'}>
             Thích
           </Text>
         </Button>
         <Button variant="ghost" className="flex-1" onPress={() => onComment?.(post)}>
-          <Ionicons name="chatbubble-outline" size={20} color="hsl(240, 3.8%, 46.1%)" />
+          <Ionicons name="chatbubble-outline" size={20} color={colors.mutedForeground} />
           <Text className="text-muted-foreground">Bình luận</Text>
         </Button>
       </View>

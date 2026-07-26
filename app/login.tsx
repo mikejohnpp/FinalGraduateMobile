@@ -6,8 +6,10 @@ import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useLoginUser } from '@/hooks/useUser';
+import { useThemeColors } from '@/hooks/useTheme';
 
 export default function LoginScreen() {
+  const colors = useThemeColors();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +56,7 @@ export default function LoginScreen() {
               <TextInput
                 className="h-12 rounded-md border border-input bg-background px-3 text-foreground"
                 placeholder="you@example.com"
-                placeholderTextColor="hsl(240, 3.8%, 46.1%)"
+                placeholderTextColor={colors.mutedForeground}
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
@@ -68,7 +70,7 @@ export default function LoginScreen() {
               <TextInput
                 className="h-12 rounded-md border border-input bg-background px-3 text-foreground"
                 placeholder="Nhập mật khẩu"
-                placeholderTextColor="hsl(240, 3.8%, 46.1%)"
+                placeholderTextColor={colors.mutedForeground}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -82,7 +84,15 @@ export default function LoginScreen() {
               <Text>{isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}</Text>
             </Button>
 
+            <Button
+              variant="link"
+              className="h-auto self-center p-0"
+              onPress={() => router.push('/forgot-password')}>
+              <Text className="text-primary">Quên mật khẩu?</Text>
+            </Button>
+
             <View className="mt-4 flex-row items-center justify-center gap-1">
+
               <Text variant="muted">Chưa có tài khoản?</Text>
               <Button variant="link" className="h-auto p-0" onPress={() => router.push('/register')}>
                 <Text className="text-primary">Đăng ký</Text>

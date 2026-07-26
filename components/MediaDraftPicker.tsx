@@ -4,6 +4,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '@/components/ui/text';
+import { useThemeColors } from '@/hooks/useTheme';
 import type { DraftMedia } from '@/hooks/useMediaUpload';
 
 interface MediaDraftPickerProps {
@@ -22,6 +23,8 @@ export default function MediaDraftPicker({
   disabled,
   variant = 'button',
 }: MediaDraftPickerProps) {
+  const colors = useThemeColors();
+
   return (
     <View className="gap-2">
       {drafts.length > 0 && (
@@ -57,7 +60,7 @@ export default function MediaDraftPicker({
           <Ionicons
             name="image-outline"
             size={24}
-            color={disabled ? 'hsl(240,3.8%,70%)' : 'hsl(142,71%,45%)'}
+            color={disabled ? colors.mutedForeground : 'hsl(142,71%,45%)'}
           />
         </Pressable>
       ) : (

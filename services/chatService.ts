@@ -24,6 +24,20 @@ export class ChatService extends BaseService {
         return res.data ?? null;
     }
 
+    // Load thêm tin nhắn cũ hơn theo con trỏ beforeId (cursor). beforeId = id tin
+    // nhắn cũ nhất hiện có; null = lấy trang đầu.
+    async getConversationDetail2(
+        conversationId: number,
+        beforeId: number | null,
+    ): Promise<MessageChat | null> {
+        const url = beforeId
+            ? `chat/conversations/conversation2/${conversationId}?beforeId=${beforeId}`
+            : `chat/conversations/conversation2/${conversationId}`;
+        const res = await http.get<ApiResultGeneric<MessageChat>>(url);
+        return res.data ?? null;
+    }
+
+
     // Tạo hội thoại 1-1
     async createDirectConversation(
         userOppenentId: number,
@@ -48,6 +62,28 @@ export class ChatService extends BaseService {
         );
         return res.data ?? null;
     }
+
+    // Thêm thành viên vào nhóm chat
+    async addMembersToGroup(
+        conversationId: number,
+        memberIds: number[],
+        userCurrentId: number,
+    ): Promise<Conversation | null> {
+        const res = await http.post<ApiResultGeneric<Conversation>>(
+            `chat/conversations/${conversationId}/members`,
+            { memberIds, userCurrentId },
+        );
+        return res.data ?? null;
+    }
+
+    // Lấy toàn bộ ảnh/file đã chia sẻ trong hội thoại (quản lý phương tiện).
+    async getConversationMedia(conversationId: number): Promise<MessageChat | null> {
+        const res = await http.get<ApiResultGeneric<MessageChat>>(
+            `chat/conversations/conversationImageAndFile/${conversationId}`,
+        );
+        return res.data ?? null;
+    }
 }
+
 
 export default new ChatService();

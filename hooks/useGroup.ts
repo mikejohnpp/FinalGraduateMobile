@@ -6,7 +6,8 @@ import { uploadImageToSupabase } from '@/lib/mediaUpload';
 import groupService from '@/services/groupService';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { groupActions } from '@/store/groupSlice';
-import type { CursorPageResponse, IGroup, IPost } from '@/types';
+import type { CursorPageResponse, IGroup, IGroupMember, IPost } from '@/types';
+
 
 
 // useGroupsData — danh sách nhóm đã tham gia + gợi ý
@@ -297,4 +298,30 @@ export function useGroupImage() {
 
     return { uploadAvatar, uploadCover, uploadingAvatar, uploadingCover };
 }
+
+// useGroupMembers — danh sách thành viên của một nhóm.
+export function useGroupMembers(groupId: number) {
+    const [members, setMembers] = useState<IGroupMember[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    const fetchMembers = useCallback(async () => {
+        if (!groupId) return;
+        setLoading(true);
+        try {
+            const data = await groupService.getGroupMembers(groupId);
+            setMembers(data);
+        } catch (e) {
+            console.error('Lỗi khi tải thành viên nhóm:', e);
+        } finally {
+            setLoading(false);
+        }
+    }, [groupId]);
+
+    useEffect(() => {
+        fetchMembers();
+    }, [fetchMembers]);
+
+    return { members, loading, refetch: fetchMembers };
+}
+
 

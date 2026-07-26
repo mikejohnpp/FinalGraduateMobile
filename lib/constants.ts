@@ -31,6 +31,9 @@ export const API = {
     LOGOUT: 'auth/logout',
     REGISTER: 'auth/register',
     ACTIVE: 'auth/active',
+    FORGOT_PASSWORD: 'auth/forgot-password',
+    VERIFY_OTP: 'auth/verify-otp',
+    RESET_PASSWORD: 'auth/reset-password',
 
     POST: {
         BASE: 'users/posts',
@@ -60,7 +63,17 @@ export const API = {
         REQUESTS: 'users/friends/requests',
         REQUESTS_COUNT: 'users/friends/requests/count',
         SUGGESTIONS: 'users/friends/suggestions',
+        STATUS: 'users/friends/status',
+        CANCEL_REQUEST: 'users/friends/requests/cancel',
     },
+
+    NOTIFICATION: {
+        BASE: 'notifications', // GET danh sách thông báo
+        UNREAD_COUNT: 'notifications/unread-count', // GET badge count chưa đọc
+        READ_ALL: 'notifications/read-all', // PUT đánh dấu tất cả đã đọc
+        // PUT notifications/{id}/read — đánh dấu 1 thông báo đã đọc
+    },
+
 
     PROFILE: {
         BASE: 'users',
@@ -81,4 +94,11 @@ export const API = {
         POST_APPROVE: 'users/groups',
         POST_REJECT: 'users/groups',
     },
+
+    STORY: {
+        BASE: 'users/story',
+        REEL: 'users/story/reel',
+        FRIENDS: 'users/story/friends',
+    },
 };
+

@@ -1,5 +1,5 @@
 // useChat hooks — port ý tưởng từ web (MessengerLayout + chatSlice + chatSocket).
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
     connectSocket,
     isConnected,
@@ -11,7 +11,7 @@ import {
 import chatService from '@/services/chatService';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { chatActions } from '@/store/chatSlice';
-import type { ChatMessage, Conversation } from '@/types';
+import type { ChatMessage, Conversation, MediaInput } from '@/types';
 
 // useSocketConnection — kết nối STOMP khi đã đăng nhập.
 // Lưu ý: KHÔNG ngắt socket khi component unmount (giữ kết nối sống cho toàn app),
@@ -63,6 +63,11 @@ export function useConversation(conversationId: number) {
     const connected = useAppSelector((r) => r.chat.connected);
     const typingUsers = useAppSelector((r) => r.chat.typingUsers);
     const [loading, setLoading] = useState(false);
+    const [loadingOlder, setLoadingOlder] = useState(false);
+    // Còn tin nhắn cũ hơn để tải không. Trang đầu trả < size ⇒ hết.
+    const hasMoreRef = useRef(true);
+    const loadingOlderRef = useRef(false);
+
 
     // Tải chi tiết hội thoại khi mở.
     useEffect(() => {
@@ -108,6 +113,46 @@ export function useConversation(conversationId: number) {
         [conversationId],
     );
 
+    // Gửi media (ảnh/file) — url đã upload lên Supabase. messageType suy từ mediaType.
+    const sendMedia = useCallback(
+        (media: MediaInput) => {
+            if (!conversationId || !media.url) return;
+            if (!isConnected()) return;
+            const messageType = media.mediaType === 'IMAGE' ? 'IMAGE' : 'FILE';
+            wsSendMessage({ conversationId, content: media.url, messageType });
+        },
+        [conversationId],
+    );
+
+    // Tải thêm tin nhắn cũ hơn (cursor beforeId = id tin nhắn cũ nhất hiện có).
+    const loadOlder = useCallback(async () => {
+        if (!conversationId || loadingOlderRef.current || !hasMoreRef.current) return;
+        const oldest = chatInfo?.messages?.[chatInfo.messages.length - 1];
+        if (!oldest) return;
+
+        loadingOlderRef.current = true;
+        setLoadingOlder(true);
+        try {
+            const data = await chatService.getConversationDetail2(conversationId, oldest.id);
+            const older = data?.messages ?? [];
+            if (older.length === 0) {
+                hasMoreRef.current = false;
+            } else {
+                dispatch(
+                    chatActions.prependMessages({
+                        messages: older,
+                        currentPage: (chatInfo?.currentPage ?? 0) + 1,
+                    }),
+                );
+            }
+        } catch (e) {
+            console.error('Lỗi khi tải tin nhắn cũ:', e);
+        } finally {
+            loadingOlderRef.current = false;
+            setLoadingOlder(false);
+        }
+    }, [conversationId, chatInfo, dispatch]);
+
     const setTyping = useCallback(
         (isTyping: boolean) => {
             if (!conversationId) return;
@@ -122,7 +167,11 @@ export function useConversation(conversationId: number) {
         members: chatInfo?.members ?? [],
         typingUsers,
         loading,
+        loadingOlder,
         send,
+        sendMedia,
+        loadOlder,
         setTyping,
     };
 }
+

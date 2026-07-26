@@ -8,6 +8,7 @@ import { Text } from '@/components/ui/text';
 import { SentimentIndicator } from '@/components/SentimentIndicator';
 import MediaGallery from '@/components/MediaGallery';
 import { useLikeComment, useReplies } from '@/hooks/useComment';
+import { useThemeColors } from '@/hooks/useTheme';
 
 import { resolveMediaUrl } from '@/lib/media';
 import { timeAgo } from '@/lib/time';
@@ -21,6 +22,7 @@ interface CommentItemProps {
 }
 
 export function CommentItem({ comment, postId, onReply, isReply = false }: CommentItemProps) {
+  const colors = useThemeColors();
   const avatarUri = resolveMediaUrl(comment.author.avatar);
   const displayName = comment.author.nickName || comment.author.name;
 
@@ -108,7 +110,7 @@ export function CommentItem({ comment, postId, onReply, isReply = false }: Comme
         {/* Replies toggle */}
         {!isReply && comment.replyCount > 0 && (
           <Button variant="link" className="h-auto justify-start p-0 pl-1" onPress={toggleReplies}>
-            <Ionicons name="return-down-forward-outline" size={14} color="hsl(240, 3.8%, 46.1%)" />
+            <Ionicons name="return-down-forward-outline" size={14} color={colors.mutedForeground} />
             <Text className="text-xs text-muted-foreground">
               {showReplies ? 'Ẩn phản hồi' : `Xem ${comment.replyCount} phản hồi`}
             </Text>

@@ -7,11 +7,13 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { friendActions } from '@/store/friendSlice';
 import type {
     CursorPageResponse,
+    FriendStatus,
     IFriendRequest,
     IFriendRequestCreate,
     IFriendship,
     IFriendSuggestion,
 } from '@/types';
+
 
 // useFriendRequests — lời mời kết bạn đã nhận (infinite scroll)
 export function useFriendRequests() {
@@ -352,4 +354,100 @@ export function useFriendRequestCount() {
     }, [dispatch, userId]);
 
     return { count: requestCount };
+}
+
+// useProfileFriendStatus — trạng thái bạn bè khi xem profile người khác.
+// Gồm: fetch trạng thái + gửi/hủy lời mời, chấp nhận, hủy kết bạn (đồng bộ web).
+export function useProfileFriendStatus(targetUserId: number | undefined) {
+    const currentUserId = useAppSelector((s) => s.user.userId);
+    const [status, setStatus] = useState<FriendStatus | null>(null);
+    const [requestId, setRequestId] = useState<number | undefined>(undefined);
+    const [loading, setLoading] = useState(false);
+    const [actionLoading, setActionLoading] = useState(false);
+
+    useEffect(() => {
+        if (!currentUserId || !targetUserId || currentUserId === targetUserId) return;
+        let cancelled = false;
+        setLoading(true);
+        friendService
+            .getFriendStatus(currentUserId, targetUserId)
+            .then((res) => {
+                if (!cancelled && res) {
+                    setStatus(res.status);
+                    setRequestId(res.requestId);
+                }
+            })
+            .finally(() => {
+                if (!cancelled) setLoading(false);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [currentUserId, targetUserId]);
+
+    const sendRequest = useCallback(async () => {
+        if (!currentUserId || !targetUserId) return;
+        setActionLoading(true);
+        try {
+            const success = await friendService.sendRequest(currentUserId, targetUserId);
+            if (success) setStatus('PENDING_SENT');
+            else Alert.alert('Lỗi', 'Gửi lời mời thất bại, vui lòng thử lại');
+        } catch {
+            Alert.alert('Lỗi', 'Có lỗi xảy ra');
+        } finally {
+            setActionLoading(false);
+        }
+    }, [currentUserId, targetUserId]);
+
+    const cancelRequest = useCallback(async () => {
+        if (!currentUserId || !targetUserId) return;
+        setActionLoading(true);
+        try {
+            const success = await friendService.cancelFriendRequest(currentUserId, targetUserId);
+            if (success) {
+                setStatus('NOT_FRIENDS');
+                setRequestId(undefined);
+            } else {
+                Alert.alert('Lỗi', 'Hủy lời mời thất bại, vui lòng thử lại');
+            }
+        } catch {
+            Alert.alert('Lỗi', 'Có lỗi xảy ra');
+        } finally {
+            setActionLoading(false);
+        }
+    }, [currentUserId, targetUserId]);
+
+    const acceptRequest = useCallback(async () => {
+        if (!requestId || !currentUserId) return;
+        setActionLoading(true);
+        try {
+            const success = await friendService.acceptRequest(requestId, currentUserId);
+            if (success) {
+                setStatus('FRIENDS');
+                setRequestId(undefined);
+            } else {
+                Alert.alert('Lỗi', 'Có lỗi xảy ra, vui lòng thử lại');
+            }
+        } catch {
+            Alert.alert('Lỗi', 'Có lỗi xảy ra');
+        } finally {
+            setActionLoading(false);
+        }
+    }, [requestId, currentUserId]);
+
+    const unfriend = useCallback(async () => {
+        if (!currentUserId || !targetUserId) return;
+        setActionLoading(true);
+        try {
+            const success = await friendService.unfriend(targetUserId, currentUserId);
+            if (success) setStatus('NOT_FRIENDS');
+            else Alert.alert('Lỗi', 'Có lỗi xảy ra, vui lòng thử lại');
+        } catch {
+            Alert.alert('Lỗi', 'Có lỗi xảy ra');
+        } finally {
+            setActionLoading(false);
+        }
+    }, [currentUserId, targetUserId]);
+
+    return { status, loading, actionLoading, sendRequest, cancelRequest, acceptRequest, unfriend };
 }

@@ -13,6 +13,7 @@ import {
   type UserSearchResult,
 } from '@/hooks/useSearch';
 import { resolveMediaUrl } from '@/lib/media';
+import { useThemeColors } from '@/hooks/useTheme';
 
 type Row =
   | { kind: 'header'; title: string }
@@ -20,6 +21,7 @@ type Row =
   | { kind: 'group'; data: GroupSearchResult };
 
 export default function SearchScreen() {
+  const colors = useThemeColors();
   const router = useRouter();
   const { results, loading, search, clear } = useSearch();
   const [query, setQuery] = useState('');
@@ -49,14 +51,14 @@ export default function SearchScreen() {
       {/* Header với ô tìm kiếm */}
       <View className="flex-row items-center gap-2 border-b border-border px-3 py-2">
         <Button variant="ghost" className="h-auto p-1" onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="hsl(240, 5.9%, 10%)" />
+          <Ionicons name="arrow-back" size={22} color={colors.foreground} />
         </Button>
         <View className="flex-1 flex-row items-center gap-2 rounded-full border border-input bg-muted px-3">
-          <Ionicons name="search" size={18} color="hsl(240, 3.8%, 46.1%)" />
+          <Ionicons name="search" size={18} color={colors.mutedForeground} />
           <TextInput
             className="h-10 flex-1 text-foreground"
             placeholder="Tìm người dùng, nhóm..."
-            placeholderTextColor="hsl(240, 3.8%, 46.1%)"
+            placeholderTextColor={colors.mutedForeground}
             value={query}
             onChangeText={setQuery}
             autoFocus
@@ -68,7 +70,7 @@ export default function SearchScreen() {
                 setQuery('');
                 clear();
               }}>
-              <Ionicons name="close-circle" size={18} color="hsl(240, 3.8%, 46.1%)" />
+              <Ionicons name="close-circle" size={18} color={colors.mutedForeground} />
             </Pressable>
           )}
         </View>
@@ -112,7 +114,7 @@ if (item.kind === 'user') {
                 <Text className="flex-1 font-medium" numberOfLines={1}>
                   {name}
                 </Text>
-                <Ionicons name="person-outline" size={18} color="hsl(240, 3.8%, 46.1%)" />
+                <Ionicons name="person-outline" size={18} color={colors.mutedForeground} />
               </Pressable>
             );
           }

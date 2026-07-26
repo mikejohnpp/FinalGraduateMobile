@@ -55,6 +55,51 @@ export class UserService extends BaseService {
         }
     }
 
+    /** POST /auth/forgot-password — gửi OTP đặt lại mật khẩu về email */
+    async forgotPassword(email: string): Promise<ApiResultGeneric<undefined> | undefined> {
+        try {
+            return await http.post<ApiResultGeneric<undefined>>(`/${API.FORGOT_PASSWORD}`, {
+                email,
+            });
+        } catch (e) {
+            return Promise.reject(e);
+        }
+    }
+
+    /** POST /auth/verify-otp — xác nhận mã OTP */
+    async verifyOtp(
+        email: string,
+        otp: string,
+    ): Promise<ApiResultGeneric<undefined> | undefined> {
+        try {
+            return await http.post<ApiResultGeneric<undefined>>(`/${API.VERIFY_OTP}`, {
+                email,
+                otp,
+            });
+        } catch (e) {
+            return Promise.reject(e);
+        }
+    }
+
+    /** POST /auth/reset-password — đặt lại mật khẩu bằng OTP */
+    async resetPassword(
+        email: string,
+        otp: string,
+        newPassword: string,
+        confirmPassword: string,
+    ): Promise<ApiResultGeneric<undefined> | undefined> {
+        try {
+            return await http.post<ApiResultGeneric<undefined>>(`/${API.RESET_PASSWORD}`, {
+                email,
+                otp,
+                newPassword,
+                confirmPassword,
+            });
+        } catch (e) {
+            return Promise.reject(e);
+        }
+    }
+
     async getProfile(userId: number): Promise<ApiResultGeneric<UserProfileDTO> | undefined> {
         try {
             return await http.get<ApiResultGeneric<UserProfileDTO>>(`/users/${userId}/profile`);

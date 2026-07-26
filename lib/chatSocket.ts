@@ -132,7 +132,11 @@ export function unsubscribeConversation(conversationId: number): void {
     }
 }
 
-export function sendMessage(message: { conversationId: number; content: string }): void {
+export function sendMessage(message: {
+    conversationId: number;
+    content: string;
+    messageType?: string;
+}): void {
     if (!client?.connected) {
         log('sendMessage skipped — not connected');
         return;
@@ -142,6 +146,7 @@ export function sendMessage(message: { conversationId: number; content: string }
         body: JSON.stringify(message),
     });
 }
+
 
 export function sendTypingIndicator(payload: {
     conversationId: number;

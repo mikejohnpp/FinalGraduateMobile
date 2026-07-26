@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { RTCPeerConnection, RTCIceCandidate, RTCSessionDescription, mediaDevices, MediaStream } from 'react-native-webrtc';
-import { Audio } from 'expo-av';
+import { createAudioPlayer, type AudioPlayer } from 'expo-audio';
 import { sendCallSignal, subscribeCallSignals, unsubscribeCallSignals } from '@/lib/chatSocket';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
@@ -46,8 +46,8 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
     const callTypeRef = useRef<'AUDIO' | 'VIDEO'>('VIDEO');
     const callStartTimeRef = useRef<number | null>(null);
 
-    const ringtoneAudio = useRef<Audio.Sound | null>(null);
-    const callingAudio = useRef<Audio.Sound | null>(null);
+    const ringtoneAudio = useRef<AudioPlayer | null>(null);
+    const callingAudio = useRef<AudioPlayer | null>(null);
 
     const currentUserId = useSelector((state: RootState) => state.user.userId);
 
@@ -55,47 +55,39 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
         remoteUserIdRef.current = remoteUserId;
     }, [remoteUserId]);
 
-    // Init sounds
+    // Init sounds (expo-audio: createAudioPlayer đồng bộ, không cần await).
     useEffect(() => {
-        let isMounted = true;
-        (async () => {
-            try {
-                const { sound: ringtone } = await Audio.Sound.createAsync(
-                    require('../assets/sounds/ringtone.mp3'),
-                    { isLooping: true }
-                );
-                const { sound: calling } = await Audio.Sound.createAsync(
-                    require('../assets/sounds/calling.mp3'),
-                    { isLooping: true }
-                );
-                if (isMounted) {
-                    ringtoneAudio.current = ringtone;
-                    callingAudio.current = calling;
-                }
-            } catch (err) {
-                console.log('Error loading sounds', err);
-            }
-        })();
+        try {
+            const ringtone = createAudioPlayer(require('../assets/sounds/ringtone.mp3'));
+            ringtone.loop = true;
+            const calling = createAudioPlayer(require('../assets/sounds/calling.mp3'));
+            calling.loop = true;
+            ringtoneAudio.current = ringtone;
+            callingAudio.current = calling;
+        } catch (err) {
+            console.log('Error loading sounds', err);
+        }
 
         return () => {
-            isMounted = false;
-            ringtoneAudio.current?.unloadAsync();
-            callingAudio.current?.unloadAsync();
+            ringtoneAudio.current?.remove();
+            callingAudio.current?.remove();
         };
     }, []);
 
-    // Play sounds
+    // Play sounds. expo-audio không có stop(); dùng pause() + seekTo(0) để tua về đầu.
     useEffect(() => {
         if (callState === 'CALLING') {
-            callingAudio.current?.playAsync();
+            callingAudio.current?.play();
         } else {
-            callingAudio.current?.stopAsync();
+            callingAudio.current?.pause();
+            callingAudio.current?.seekTo(0);
         }
 
         if (callState === 'RINGING') {
-            ringtoneAudio.current?.playAsync();
+            ringtoneAudio.current?.play();
         } else {
-            ringtoneAudio.current?.stopAsync();
+            ringtoneAudio.current?.pause();
+            ringtoneAudio.current?.seekTo(0);
         }
     }, [callState]);
 

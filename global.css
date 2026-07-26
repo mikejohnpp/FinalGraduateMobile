@@ -2,48 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Theme đồng bộ với web (FinalGraduateFrontend/src/index.css).
+ * Web dùng oklch; ở đây quy đổi sang HSL (NativeWind/RN chưa hỗ trợ tốt oklch).
+ * Điểm chính: primary chuyển sang tông xanh (hue ~224), neutrals nhuốm nhẹ xanh (hue ~225).
+ */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --background: 225 40% 99%;
+    --foreground: 240 10% 4%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 240 10% 4%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
+    --popover-foreground: 240 10% 4%;
+    --primary: 224 76% 55%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
+    --secondary: 225 25% 95%;
+    --secondary-foreground: 240 6% 10%;
+    --muted: 225 25% 95%;
+    --muted-foreground: 225 5% 45%;
+    --accent: 225 55% 93%;
+    --accent-foreground: 223 59% 35%;
+    --destructive: 358 75% 55%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
+    --border: 225 30% 90%;
+    --input: 225 30% 90%;
+    --ring: 224 76% 55%;
   }
 
-  .dark {
-    --background: 240 10% 3.9%;
+  /*
+   * NativeWind v4 cần selector `.dark:root` (không phải `.dark` thuần như web)
+   * để áp dụng bộ biến dark cho toàn bộ cây component trên native.
+   */
+  .dark:root {
+    --background: 225 25% 10%;
     --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
+    --card: 225 22% 14%;
     --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
+    --popover: 225 22% 14%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
+    --primary: 224 70% 62%;
+    --primary-foreground: 225 25% 10%;
+    --secondary: 225 15% 22%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --muted: 225 15% 22%;
+    --muted-foreground: 225 10% 65%;
+    --accent: 225 25% 28%;
+    --accent-foreground: 225 55% 85%;
+    --destructive: 358 65% 55%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --border: 225 15% 24%;
+    --input: 225 15% 26%;
+    --ring: 224 70% 62%;
   }
 }

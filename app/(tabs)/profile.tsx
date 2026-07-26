@@ -1,21 +1,26 @@
-// Màn hình hồ sơ cá nhân — port ý tưởng từ web (Profile + ProfileCover/About).
-import { useCallback } from 'react';
+// Màn hình hồ sơ cá nhân — port ý tưởng từ web (Profile + ProfileCover/About + ProfileTabs).
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { PostCard } from '@/components/PostCard';
+import { ProfileReels } from '@/components/ProfileReels';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { pickImage } from '@/lib/imagePicker';
 import { resolveMediaUrl } from '@/lib/media';
+import { useThemeColors } from '@/hooks/useTheme';
 import { useProfile, useUploadAvatar, useUploadCover, useUserPosts } from '@/hooks/useProfile';
 import { useLikePost } from '@/hooks/usePost';
 import { useAppSelector } from '@/store/hooks';
 import type { IPost } from '@/types';
 
+type ProfileTab = 'posts' | 'reels';
+
 export default function ProfileScreen() {
+  const colors = useThemeColors();
   const userId = useAppSelector((r) => r.user.userId);
   const { profile, isOwner, loading, refetch } = useProfile(userId);
   const { posts } = useUserPosts(userId);
@@ -23,6 +28,8 @@ export default function ProfileScreen() {
   const { upload: uploadCover, loading: coverLoading } = useUploadCover();
   const { like, unlike, loadingId } = useLikePost();
   const router = useRouter();
+
+  const [activeTab, setActiveTab] = useState<ProfileTab>('posts');
 
   const handleToggleLike = useCallback(
     (post: IPost) => {
@@ -83,7 +90,7 @@ export default function ProfileScreen() {
             {coverLoading ? (
               <ActivityIndicator size="small" />
             ) : (
-              <Ionicons name="camera" size={18} color="hsl(240, 5.9%, 10%)" />
+              <Ionicons name="camera" size={18} color={colors.foreground} />
             )}
           </View>
         )}
@@ -110,7 +117,7 @@ export default function ProfileScreen() {
               {avatarLoading ? (
                 <ActivityIndicator size="small" />
               ) : (
-                <Ionicons name="camera" size={16} color="hsl(240, 5.9%, 10%)" />
+                <Ionicons name="camera" size={16} color={colors.foreground} />
               )}
             </View>
           )}
@@ -133,7 +140,7 @@ export default function ProfileScreen() {
             variant="outline"
             className="mt-3 w-full rounded-full"
             onPress={() => router.push('/profile/edit')}>
-            <Ionicons name="create-outline" size={18} color="hsl(240, 5.9%, 10%)" />
+            <Ionicons name="create-outline" size={18} color={colors.foreground} />
             <Text>Chỉnh sửa trang cá nhân</Text>
           </Button>
         )}
@@ -147,16 +154,30 @@ export default function ProfileScreen() {
         {!!profile.hometown && <InfoRow icon="home-outline" text={profile.hometown} />}
       </View>
 
-      <View className="mt-4 border-t border-border px-4 py-3">
-        <Text variant="large">Bài viết</Text>
+      {/* Tabs: Bài viết / Reels */}
+      <View className="mt-4 flex-row border-t border-border">
+        <TabButton
+          label="Bài viết"
+          active={activeTab === 'posts'}
+          onPress={() => setActiveTab('posts')}
+        />
+        <TabButton
+          label="Reels"
+          active={activeTab === 'reels'}
+          onPress={() => setActiveTab('reels')}
+        />
       </View>
+
+      {activeTab === 'reels' && userId != null && (
+        <ProfileReels userId={userId} isOwner={isOwner} />
+      )}
     </View>
   );
 
   return (
     <SafeAreaView className="flex-1 bg-muted" edges={['top']}>
       <FlatList
-        data={posts}
+        data={activeTab === 'posts' ? posts : []}
         keyExtractor={(item) => String(item.id)}
         ListHeaderComponent={header}
         renderItem={({ item }) => (
@@ -169,9 +190,11 @@ export default function ProfileScreen() {
         )}
         ItemSeparatorComponent={() => <View className="h-2" />}
         ListEmptyComponent={
-          <View className="items-center bg-card py-8">
-            <Text variant="muted">Chưa có bài viết nào.</Text>
-          </View>
+          activeTab === 'posts' ? (
+            <View className="items-center bg-card py-8">
+              <Text variant="muted">Chưa có bài viết nào.</Text>
+            </View>
+          ) : null
         }
         contentContainerClassName="bg-card pb-4"
       />
@@ -179,10 +202,33 @@ export default function ProfileScreen() {
   );
 }
 
+function TabButton({
+  label,
+  active,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+}) {
+  const colors = useThemeColors();
+  return (
+    <Pressable
+      onPress={onPress}
+      className="flex-1 items-center border-b-2 py-3 active:opacity-70"
+      style={{ borderBottomColor: active ? colors.primary : 'transparent' }}>
+      <Text className={active ? 'font-semibold text-primary' : 'font-semibold text-muted-foreground'}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
 function InfoRow({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) {
+  const colors = useThemeColors();
   return (
     <View className="flex-row items-center gap-2">
-      <Ionicons name={icon} size={18} color="hsl(240, 3.8%, 46.1%)" />
+      <Ionicons name={icon} size={18} color={colors.mutedForeground} />
       <Text className="text-muted-foreground">{text}</Text>
     </View>
   );

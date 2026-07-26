@@ -9,6 +9,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider } from 'react-redux';
 import { store } from '@/store/store';
 import { useSession } from '@/hooks/useSession';
+import { ThemeProvider } from '@/hooks/useTheme';
+
 
 function RootNavigator() {
   const { hydrated, isLoggedIn } = useSession();
@@ -18,7 +20,10 @@ function RootNavigator() {
   useEffect(() => {
     if (!hydrated) return;
 
-    const inAuthGroup = segments[0] === 'login' || segments[0] === 'register';
+    const inAuthGroup =
+      segments[0] === 'login' ||
+      segments[0] === 'register' ||
+      segments[0] === 'forgot-password';
 
     if (!isLoggedIn && !inAuthGroup) {
       // Chưa đăng nhập → về Login
@@ -52,14 +57,17 @@ import CallModal from '@/components/messenger/CallModal';
 export default function RootLayout() {
   return (
     <Provider store={store}>
-      <CallProvider>
-        <SafeAreaProvider>
-          <RootNavigator />
-          <StatusBar style="auto" />
-          <PortalHost />
-          <CallModal />
-        </SafeAreaProvider>
-      </CallProvider>
+      <ThemeProvider>
+        <CallProvider>
+          <SafeAreaProvider>
+            <RootNavigator />
+            <StatusBar style="auto" />
+            <PortalHost />
+            <CallModal />
+          </SafeAreaProvider>
+        </CallProvider>
+      </ThemeProvider>
     </Provider>
+
   );
 }

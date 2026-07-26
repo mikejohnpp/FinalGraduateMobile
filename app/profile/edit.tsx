@@ -9,8 +9,10 @@ import { Text } from '@/components/ui/text';
 import { useUpdateProfile } from '@/hooks/useProfile';
 import { useAppSelector } from '@/store/hooks';
 import type { IProfileUpdate } from '@/types';
+import { useThemeColors } from '@/hooks/useTheme';
 
 export default function EditProfileScreen() {
+  const colors = useThemeColors();
   const profile = useAppSelector((r) => r.user.profile);
   const { update, loading } = useUpdateProfile();
   const router = useRouter();
@@ -40,7 +42,7 @@ export default function EditProfileScreen() {
       {/* Header */}
       <View className="flex-row items-center justify-between border-b border-border px-4 py-3">
         <Button variant="ghost" className="h-auto p-1" onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="hsl(240, 5.9%, 10%)" />
+          <Ionicons name="arrow-back" size={22} color={colors.foreground} />
         </Button>
         <Text variant="large">Chỉnh sửa hồ sơ</Text>
         <Button variant="ghost" className="h-auto p-0" disabled={loading} onPress={handleSave}>
@@ -85,7 +87,9 @@ function Field({
   onChange: (v: string) => void;
   multiline?: boolean;
 }) {
+  const colors = useThemeColors();
   return (
+
     <View className="gap-2">
       <Text variant="small">{label}</Text>
       <TextInput
@@ -94,7 +98,7 @@ function Field({
         value={value}
         onChangeText={onChange}
         multiline={multiline}
-        placeholderTextColor="hsl(240, 3.8%, 46.1%)"
+        placeholderTextColor={colors.mutedForeground}
       />
     </View>
   );

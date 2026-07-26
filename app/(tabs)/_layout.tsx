@@ -1,17 +1,24 @@
 import { Tabs } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useThemeColors } from '@/hooks/useTheme';
 
 export default function TabLayout() {
+  // Màu reactive theo theme sáng/tối.
+  const colors = useThemeColors();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
-        tabBarActiveTintColor: 'hsl(240, 5.9%, 10%)',
-        tabBarInactiveTintColor: 'hsl(240, 3.8%, 46.1%)',
+        // Tab đang chọn dùng màu nhấn (xanh) — đồng bộ với web.
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.mutedForeground,
         tabBarStyle: {
-          borderTopColor: 'hsl(240, 5.9%, 90%)',
+          backgroundColor: colors.card,
+          borderTopColor: colors.border,
         },
+
         // Khi ẩn label, căn icon vào giữa theo chiều dọc.
         tabBarItemStyle: {
           justifyContent: 'center',

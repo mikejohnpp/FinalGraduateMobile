@@ -125,6 +125,91 @@ export function useUserRegister() {
     return { register, error, loading };
 }
 
+export function useForgotPassword() {
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    // Bước 1 — gửi OTP về email.
+    async function sendOtp(email: string): Promise<boolean> {
+        setError(null);
+        if (!email.trim()) {
+            setError('Vui lòng nhập email');
+            return false;
+        }
+        setLoading(true);
+        try {
+            const res = await userService.forgotPassword(email.trim());
+            return res?.success ?? false;
+        } catch (e: any) {
+            setError(e?.response?.data?.message ?? 'Không gửi được mã xác nhận');
+            return false;
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    // Bước 2 — xác nhận OTP.
+    async function verifyOtp(email: string, otp: string): Promise<boolean> {
+        setError(null);
+        if (!otp.trim()) {
+            setError('Vui lòng nhập mã OTP');
+            return false;
+        }
+        setLoading(true);
+        try {
+            const res = await userService.verifyOtp(email.trim(), otp.trim());
+            return res?.success ?? false;
+        } catch (e: any) {
+            setError(e?.response?.data?.message ?? 'Mã OTP không hợp lệ');
+            return false;
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    // Bước 3 — đặt lại mật khẩu.
+    async function resetPassword(
+        email: string,
+        otp: string,
+        newPassword: string,
+        confirmPassword: string,
+    ): Promise<boolean> {
+        setError(null);
+        if (!newPassword.trim() || !confirmPassword.trim()) {
+            setError('Vui lòng điền đầy đủ thông tin');
+            return false;
+        }
+        if (newPassword !== confirmPassword) {
+            setError('Mật khẩu xác nhận không khớp');
+            return false;
+        }
+        if (newPassword.length < 6) {
+            setError('Mật khẩu phải có ít nhất 6 ký tự');
+            return false;
+        }
+        setLoading(true);
+        try {
+            const res = await userService.resetPassword(
+                email.trim(),
+                otp.trim(),
+                newPassword,
+                confirmPassword,
+            );
+            if (res?.success) {
+                Alert.alert('Thành công', 'Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại.');
+            }
+            return res?.success ?? false;
+        } catch (e: any) {
+            setError(e?.response?.data?.message ?? 'Đặt lại mật khẩu thất bại');
+            return false;
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    return { sendOtp, verifyOtp, resetPassword, loading, error };
+}
+
 export function useUserProfile() {
     const dispatch = useAppDispatch();
     const userId = useAppSelector((r) => r.user.userId);

@@ -6,8 +6,10 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useGroupStats } from '@/hooks/useGroupAdmin';
+import { useThemeColors } from '@/hooks/useTheme';
 
 export default function GroupAdminOverviewScreen() {
+  const colors = useThemeColors();
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
     const { stats, loading } = useGroupStats(id);
@@ -18,7 +20,7 @@ export default function GroupAdminOverviewScreen() {
                 <Stack.Screen options={{ headerShown: false }} />
                 <View className="flex-row items-center gap-3 border-b border-border bg-card px-4 py-2">
                     <Button variant="ghost" className="h-auto p-1" onPress={() => router.back()}>
-                        <Ionicons name="arrow-back" size={22} color="hsl(240, 5.9%, 10%)" />
+                        <Ionicons name="arrow-back" size={22} color={colors.foreground} />
                     </Button>
                     <Text variant="large">Tổng quan</Text>
                 </View>
@@ -70,7 +72,7 @@ export default function GroupAdminOverviewScreen() {
             {/* Header */}
             <View className="flex-row items-center gap-3 border-b border-border bg-card px-4 py-2">
                 <Button variant="ghost" className="h-auto p-1" onPress={() => router.back()}>
-                    <Ionicons name="arrow-back" size={22} color="hsl(240, 5.9%, 10%)" />
+                    <Ionicons name="arrow-back" size={22} color={colors.foreground} />
                 </Button>
                 <Text variant="large">Tổng quan quản trị</Text>
             </View>
@@ -97,7 +99,7 @@ export default function GroupAdminOverviewScreen() {
                             >
                                 <View className="flex-row items-center gap-3">
                                     <View className="rounded-full bg-muted p-2">
-                                        <Ionicons name={item.icon} size={20} color="hsl(240, 3.8%, 46.1%)" />
+                                        <Ionicons name={item.icon} size={20} color={colors.mutedForeground} />
                                     </View>
                                     <View>
                                         <Text className="font-semibold">{item.label}</Text>
@@ -110,7 +112,7 @@ export default function GroupAdminOverviewScreen() {
                                 </View>
                                 <View className="flex-row items-center gap-1">
                                     <Text className="font-semibold mr-1">{item.value}</Text>
-                                    <Ionicons name="chevron-forward" size={16} color="hsl(240, 3.8%, 46.1%)" />
+                                    <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />
                                 </View>
                             </Pressable>
                         ))}
@@ -127,7 +129,7 @@ export default function GroupAdminOverviewScreen() {
                     <View className="gap-3">
                         <View className="flex-row items-center justify-between rounded-lg border border-border p-3">
                             <View className="flex-row items-center gap-3">
-                                <Ionicons name="document-text-outline" size={20} color="hsl(240, 3.8%, 46.1%)" />
+                                <Ionicons name="document-text-outline" size={20} color={colors.mutedForeground} />
                                 <Text className="font-medium">Bài viết</Text>
                             </View>
                             <View className="flex-row items-center gap-2">
@@ -143,7 +145,7 @@ export default function GroupAdminOverviewScreen() {
 
                         <View className="flex-row items-center justify-between rounded-lg border border-border p-3">
                             <View className="flex-row items-center gap-3">
-                                <Ionicons name="chatbubble-ellipses-outline" size={20} color="hsl(240, 3.8%, 46.1%)" />
+                                <Ionicons name="chatbubble-ellipses-outline" size={20} color={colors.mutedForeground} />
                                 <Text className="font-medium">Bình luận</Text>
                             </View>
                             <View className="flex-row items-center gap-2">
@@ -159,7 +161,7 @@ export default function GroupAdminOverviewScreen() {
 
                         <View className="flex-row items-center justify-between rounded-lg border border-border p-3">
                             <View className="flex-row items-center gap-3">
-                                <Ionicons name="thumbs-up-outline" size={20} color="hsl(240, 3.8%, 46.1%)" />
+                                <Ionicons name="thumbs-up-outline" size={20} color={colors.mutedForeground} />
                                 <Text className="font-medium">Cảm xúc</Text>
                             </View>
                             <View className="flex-row items-center gap-2">

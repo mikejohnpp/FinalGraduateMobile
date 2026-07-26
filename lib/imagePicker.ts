@@ -44,8 +44,37 @@ export async function pickImageWithMeta(
     return { uri: asset.uri, mimeType: asset.mimeType, fileName: asset.fileName };
 }
 
+// Chọn 1 video (dùng cho reel / story video). Trả về { uri, mimeType } hoặc null.
+export async function pickVideo(): Promise<{
+    uri: string;
+    mimeType?: string | null;
+    fileName?: string | null;
+    fileSize?: number | null;
+} | null> {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+        Alert.alert('Cần quyền truy cập', 'Hãy cấp quyền truy cập thư viện để tiếp tục.');
+        return null;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['videos'],
+        quality: 0.8,
+    });
+
+    if (result.canceled || !result.assets?.length) return null;
+    const asset = result.assets[0];
+    return {
+        uri: asset.uri,
+        mimeType: asset.mimeType,
+        fileName: asset.fileName,
+        fileSize: asset.fileSize,
+    };
+}
+
 // Chọn nhiều media (ảnh/video) cho post & comment. Trả về danh sách PickedMedia.
 export async function pickMedia(selectionLimit = 10): Promise<PickedMedia[]> {
+
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
         Alert.alert('Cần quyền truy cập', 'Hãy cấp quyền truy cập thư viện ảnh để tiếp tục.');

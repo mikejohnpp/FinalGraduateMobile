@@ -2,7 +2,15 @@
 import BaseService from '@/services/BaseService';
 import { API } from '@/lib/constants';
 import http from '@/lib/http';
-import type { ApiResult, ApiResultGeneric, CursorPageResponse, IGroup, IPost } from '@/types';
+import type {
+    ApiResult,
+    ApiResultGeneric,
+    CursorPageResponse,
+    IGroup,
+    IGroupMember,
+    IPost,
+} from '@/types';
+
 
 export class GroupService extends BaseService {
     async getGroupDetail(groupId: number, userId: number): Promise<IGroup | null> {
@@ -48,12 +56,13 @@ export class GroupService extends BaseService {
         return res.data ?? null;
     }
 
-    async getGroupMembers(groupId: number) {
-        const res = await http.get<ApiResultGeneric<unknown[]>>(
+    async getGroupMembers(groupId: number): Promise<IGroupMember[]> {
+        const res = await http.get<ApiResultGeneric<IGroupMember[]>>(
             `${API.GROUP.BASE}/${groupId}/members`,
         );
         return res.data ?? [];
     }
+
 
     // Tham gia nhóm — trả về trạng thái PENDING/APPROVED.
     async joinGroup(

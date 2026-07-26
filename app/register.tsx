@@ -6,8 +6,10 @@ import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useUserRegister } from '@/hooks/useUser';
+import { useThemeColors } from '@/hooks/useTheme';
 
 export default function RegisterScreen() {
+  const colors = useThemeColors();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,7 +45,7 @@ export default function RegisterScreen() {
               <TextInput
                 className="h-12 rounded-md border border-input bg-background px-3 text-foreground"
                 placeholder="Tên hiển thị"
-                placeholderTextColor="hsl(240, 3.8%, 46.1%)"
+                placeholderTextColor={colors.mutedForeground}
                 value={username}
                 onChangeText={setUsername}
                 autoCapitalize="none"
@@ -55,7 +57,7 @@ export default function RegisterScreen() {
               <TextInput
                 className="h-12 rounded-md border border-input bg-background px-3 text-foreground"
                 placeholder="you@example.com"
-                placeholderTextColor="hsl(240, 3.8%, 46.1%)"
+                placeholderTextColor={colors.mutedForeground}
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
@@ -68,7 +70,7 @@ export default function RegisterScreen() {
               <TextInput
                 className="h-12 rounded-md border border-input bg-background px-3 text-foreground"
                 placeholder="Ít nhất 6 ký tự"
-                placeholderTextColor="hsl(240, 3.8%, 46.1%)"
+                placeholderTextColor={colors.mutedForeground}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -80,7 +82,7 @@ export default function RegisterScreen() {
               <TextInput
                 className="h-12 rounded-md border border-input bg-background px-3 text-foreground"
                 placeholder="Nhập lại mật khẩu"
-                placeholderTextColor="hsl(240, 3.8%, 46.1%)"
+                placeholderTextColor={colors.mutedForeground}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry

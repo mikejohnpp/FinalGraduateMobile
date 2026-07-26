@@ -18,8 +18,10 @@ import { Text } from '@/components/ui/text';
 import { useComments, useCreateComment } from '@/hooks/useComment';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
 import type { IComment } from '@/types';
+import { useThemeColors } from '@/hooks/useTheme';
 
 export default function PostDetailScreen() {
+  const colors = useThemeColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const postId = Number(id);
   const router = useRouter();
@@ -57,7 +59,7 @@ export default function PostDetailScreen() {
       {/* Header */}
       <View className="flex-row items-center gap-3 border-b border-border px-4 py-3">
         <Button variant="ghost" className="h-auto p-1" onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="hsl(240, 5.9%, 10%)" />
+          <Ionicons name="arrow-back" size={22} color={colors.foreground} />
         </Button>
         <Text variant="large">Bình luận</Text>
       </View>
@@ -130,7 +132,7 @@ export default function PostDetailScreen() {
             <TextInput
               className="h-11 flex-1 rounded-full border border-input bg-muted px-4 text-foreground"
               placeholder="Viết bình luận..."
-              placeholderTextColor="hsl(240, 3.8%, 46.1%)"
+              placeholderTextColor={colors.mutedForeground}
               value={text}
               onChangeText={setText}
               multiline
@@ -144,7 +146,7 @@ export default function PostDetailScreen() {
               <Ionicons
                 name="send"
                 size={22}
-                color={canSend ? 'hsl(240, 5.9%, 10%)' : 'hsl(240, 3.8%, 46.1%)'}
+                color={canSend ? colors.foreground : colors.mutedForeground}
               />
             </Button>
           </View>

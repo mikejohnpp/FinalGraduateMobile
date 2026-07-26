@@ -3,6 +3,7 @@
 import { View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '@/components/ui/text';
+import { useThemeColors } from '@/hooks/useTheme';
 
 interface SentimentData {
   sentiment: string | null;
@@ -40,11 +41,13 @@ const SENTIMENT_CONFIG: Record<
 };
 
 export function SentimentIndicator({ data }: { data: SentimentData }) {
+  const colors = useThemeColors();
+
   // Trường hợp không phân tích được.
   if (data.cancelReason) {
     return (
       <View className="flex-row items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5">
-        <Ionicons name="information-circle-outline" size={12} color="hsl(240, 3.8%, 46.1%)" />
+        <Ionicons name="information-circle-outline" size={12} color={colors.mutedForeground} />
         <Text variant="muted" className="text-[10px]">
           Không phân tích được
         </Text>

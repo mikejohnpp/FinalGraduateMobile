@@ -1,6 +1,6 @@
 // Màn hình danh sách hội thoại — port ý tưởng từ web (Sidebar).
-import { useCallback } from 'react';
-import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
@@ -10,12 +10,15 @@ import { useConversations, useSocketConnection } from '@/hooks/useChat';
 import { resolveMediaUrl } from '@/lib/media';
 import { useAppSelector } from '@/store/hooks';
 import type { Conversation } from '@/types';
+import { useThemeColors } from '@/hooks/useTheme';
 
 export default function MessagesScreen() {
+  const colors = useThemeColors();
   useSocketConnection();
   const { conversations, loading, refetch } = useConversations();
   const userId = useAppSelector((r) => r.user.userId);
   const router = useRouter();
+  const [query, setQuery] = useState('');
 
   // Refetch mỗi khi quay lại tab.
   useFocusEffect(
@@ -37,14 +40,42 @@ export default function MessagesScreen() {
     return resolveMediaUrl(other?.avatarUrl);
   };
 
+  // Lọc hội thoại theo tên hiển thị (khớp web: tìm theo tiêu đề).
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return conversations;
+    return conversations.filter((c) => getDisplayName(c).toLowerCase().includes(q));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversations, query, userId]);
+
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <View className="bg-card px-4 py-3">
         <Text variant="large">Đoạn chat</Text>
       </View>
 
+      {/* Ô tìm kiếm hội thoại */}
+      <View className="flex-row items-center gap-2 bg-card px-4 pb-3">
+        <View className="flex-1 flex-row items-center gap-2 rounded-full bg-muted px-3">
+          <Ionicons name="search" size={18} color={colors.mutedForeground} />
+          <TextInput
+            className="h-10 flex-1 text-foreground"
+            placeholder="Tìm kiếm đoạn chat"
+            placeholderTextColor={colors.mutedForeground}
+            value={query}
+            onChangeText={setQuery}
+            autoCapitalize="none"
+          />
+          {query.length > 0 && (
+            <Pressable onPress={() => setQuery('')}>
+              <Ionicons name="close-circle" size={18} color={colors.mutedForeground} />
+            </Pressable>
+          )}
+        </View>
+      </View>
+
       <FlatList
-        data={conversations}
+        data={filtered}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => {
           const name = getDisplayName(item);

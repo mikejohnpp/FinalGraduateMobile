@@ -8,8 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useGroupPendingPosts } from '@/hooks/useGroupAdmin';
 import { timeAgo } from '@/lib/time';
+import { useThemeColors } from '@/hooks/useTheme';
 
 export default function GroupAdminPendingPostsScreen() {
+  const colors = useThemeColors();
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
     const {
@@ -65,7 +67,7 @@ export default function GroupAdminPendingPostsScreen() {
             {/* Header */}
             <View className="flex-row items-center gap-3 border-b border-border bg-card px-4 py-2">
                 <Button variant="ghost" className="h-auto p-1" onPress={() => router.back()}>
-                    <Ionicons name="arrow-back" size={22} color="hsl(240, 5.9%, 10%)" />
+                    <Ionicons name="arrow-back" size={22} color={colors.foreground} />
                 </Button>
                 <Text variant="large">Bài viết chờ duyệt</Text>
             </View>
@@ -80,7 +82,7 @@ export default function GroupAdminPendingPostsScreen() {
                 ListEmptyComponent={
                     !loading ? (
                         <View className="items-center py-10 opacity-70">
-                            <Ionicons name="document-text-outline" size={48} color="hsl(240, 3.8%, 46.1%)" className="mb-2" />
+                            <Ionicons name="document-text-outline" size={48} color={colors.mutedForeground} className="mb-2" />
                             <Text variant="large" className="text-muted-foreground">Không có bài viết chờ duyệt</Text>
                         </View>
                     ) : null

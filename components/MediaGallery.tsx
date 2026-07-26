@@ -5,6 +5,7 @@ import { Linking, Modal, Pressable, ScrollView, View, useWindowDimensions } from
 import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '@/components/ui/text';
+import { useThemeColors } from '@/hooks/useTheme';
 import type { MediaItem } from '@/types';
 
 interface MediaGalleryProps {
@@ -39,11 +40,12 @@ function ImageTile({
     overlayCount?: number;
     onPress?: () => void;
 }) {
+    const colors = useThemeColors();
     return (
         <Pressable onPress={onPress} style={{ width, height }}>
             <Image
                 source={{ uri: item.url }}
-                style={{ width, height, borderRadius: 8, backgroundColor: 'hsl(240,4.8%,95.9%)' }}
+                style={{ width, height, borderRadius: 8, backgroundColor: colors.muted }}
                 contentFit="cover"
             />
             {overlayCount && overlayCount > 0 ? (
@@ -64,6 +66,44 @@ function ImageTile({
     );
 }
 
+// Khung hiển thị 1 ảnh kiểu letterbox (giống web): nền ảnh phóng to + làm mờ để lấp
+// hai bên viền, ảnh chính hiển thị TOÀN BỘ (contain) không bị cắt.
+function SingleImageFrame({
+    item,
+    width,
+    height,
+    onPress,
+}: {
+    item: MediaItem;
+    width: number;
+    height: number;
+    onPress?: () => void;
+}) {
+    return (
+        <Pressable
+            onPress={onPress}
+            style={{ width, height, borderRadius: 8, overflow: 'hidden', backgroundColor: '#000' }}>
+            {/* Nền mờ lấp viền */}
+            <Image
+                source={{ uri: item.url }}
+                style={{ position: 'absolute', width, height, transform: [{ scale: 1.1 }] }}
+                contentFit="cover"
+                blurRadius={20}
+            />
+            <View
+                style={{ position: 'absolute', width, height, backgroundColor: 'rgba(0,0,0,0.2)' }}
+            />
+            {/* Ảnh chính hiển thị toàn bộ */}
+            <Image
+                source={{ uri: item.url }}
+                style={{ width, height }}
+                contentFit="contain"
+            />
+        </Pressable>
+    );
+}
+
+
 // Bố cục ảnh kiểu Facebook (mosaic) tuỳ số lượng ảnh.
 function ImageMosaic({
     images,
@@ -82,9 +122,15 @@ function ImageMosaic({
 
     if (count === 1) {
         return (
-            <ImageTile item={images[0]} width={w} height={heightCap} onPress={() => onOpen(0)} />
+            <SingleImageFrame
+                item={images[0]}
+                width={w}
+                height={heightCap}
+                onPress={() => onOpen(0)}
+            />
         );
     }
+
 
     if (count === 2) {
         const size = (w - GAP) / 2;
@@ -158,6 +204,7 @@ function ImageMosaic({
 }
 
 export default function MediaGallery({ media, size = 'post' }: MediaGalleryProps) {
+    const colors = useThemeColors();
     const { width: screenWidth } = useWindowDimensions();
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -201,7 +248,7 @@ export default function MediaGallery({ media, size = 'post' }: MediaGalleryProps
                     key={item.id}
                     onPress={() => Linking.openURL(item.url)}
                     className="flex-row items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2">
-                    <Ionicons name="musical-notes-outline" size={20} color="hsl(240,3.8%,46.1%)" />
+                    <Ionicons name="musical-notes-outline" size={20} color={colors.mutedForeground} />
                     <Text className="flex-1 text-sm" numberOfLines={1}>
                         {fileNameFromUrl(item.url)}
                     </Text>
@@ -214,11 +261,11 @@ export default function MediaGallery({ media, size = 'post' }: MediaGalleryProps
                     key={item.id}
                     onPress={() => Linking.openURL(item.url)}
                     className="flex-row items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2">
-                    <Ionicons name="document-outline" size={20} color="hsl(240,3.8%,46.1%)" />
+                    <Ionicons name="document-outline" size={20} color={colors.mutedForeground} />
                     <Text className="flex-1 text-sm" numberOfLines={1}>
                         {fileNameFromUrl(item.url)}
                     </Text>
-                    <Ionicons name="download-outline" size={18} color="hsl(240,3.8%,46.1%)" />
+                    <Ionicons name="download-outline" size={18} color={colors.mutedForeground} />
                 </Pressable>
             ))}
 

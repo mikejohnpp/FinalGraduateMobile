@@ -9,12 +9,19 @@ import { PostCard } from '@/components/PostCard';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { resolveMediaUrl } from '@/lib/media';
+import { useThemeColors } from '@/hooks/useTheme';
 import { useProfile, useUserPosts } from '@/hooks/useProfile';
+import { useProfileFriendStatus } from '@/hooks/useFriend';
 import { useLikePost } from '@/hooks/usePost';
+import chatService from '@/services/chatService';
 import { useAppSelector } from '@/store/hooks';
-import type { IPost } from '@/types';
+import type { FriendStatus, IPost } from '@/types';
+
+
+
 
 export default function UserProfileScreen() {
+  const colors = useThemeColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const profileUserId = Number(id);
   const router = useRouter();
@@ -23,6 +30,9 @@ export default function UserProfileScreen() {
   const { posts } = useUserPosts(profileUserId);
   const { like, unlike, loadingId } = useLikePost();
   const currentUserId = useAppSelector((r) => r.user.userId);
+  const friendStatus = useProfileFriendStatus(profileUserId);
+  const isOwner = currentUserId === profileUserId;
+
 
   const handleToggleLike = useCallback(
     (post: IPost) => {
@@ -31,6 +41,14 @@ export default function UserProfileScreen() {
     },
     [currentUserId, like, unlike],
   );
+
+  // Tạo (hoặc lấy) hội thoại 1-1 rồi điều hướng sang màn hình chat.
+  const handleMessage = useCallback(async () => {
+    if (!currentUserId) return;
+    const conversation = await chatService.createDirectConversation(profileUserId, currentUserId);
+    if (conversation) router.push(`/chat/${conversation.id}`);
+  }, [currentUserId, profileUserId, router]);
+
 
   if (loading && !profile) {
     return (
@@ -97,7 +115,23 @@ export default function UserProfileScreen() {
         <Text variant="muted" className="mt-1 text-sm">
           {profile.friendCount} bạn bè
         </Text>
+
+        {/* Nút hành động kết bạn/nhắn tin — ẩn khi xem hồ sơ của chính mình */}
+        {!isOwner && (
+          <FriendActionButtons
+            status={friendStatus.status}
+            loading={friendStatus.loading}
+            actionLoading={friendStatus.actionLoading}
+            onSend={friendStatus.sendRequest}
+            onCancel={friendStatus.cancelRequest}
+            onAccept={friendStatus.acceptRequest}
+            onUnfriend={friendStatus.unfriend}
+            onMessage={handleMessage}
+          />
+
+        )}
       </View>
+
 
       {/* Info rows */}
       <View className="mt-4 gap-2 px-4">
@@ -120,7 +154,7 @@ export default function UserProfileScreen() {
       {/* Back bar */}
       <View className="flex-row items-center gap-3 bg-card px-4 py-2">
         <Button variant="ghost" className="h-auto p-1" onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="hsl(240, 5.9%, 10%)" />
+          <Ionicons name="arrow-back" size={22} color={colors.foreground} />
         </Button>
         <Text variant="large" numberOfLines={1}>
           {displayName}
@@ -152,10 +186,103 @@ export default function UserProfileScreen() {
 }
 
 function InfoRow({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) {
+  const colors = useThemeColors();
   return (
     <View className="flex-row items-center gap-2">
-      <Ionicons name={icon} size={18} color="hsl(240, 3.8%, 46.1%)" />
+      <Ionicons name={icon} size={18} color={colors.mutedForeground} />
       <Text className="text-muted-foreground">{text}</Text>
     </View>
   );
 }
+
+// FriendActionButtons — hiển thị nút theo trạng thái quan hệ bạn bè (đồng bộ web).
+//   NOT_FRIENDS      → "Thêm bạn bè" + "Nhắn tin"
+//   PENDING_SENT     → "Hủy lời mời" + "Nhắn tin"
+//   PENDING_RECEIVED → "Chấp nhận" + "Nhắn tin"
+//   FRIENDS          → "Bạn bè" (nhấn để hủy kết bạn) + "Nhắn tin"
+function FriendActionButtons({
+  status,
+  loading,
+  actionLoading,
+  onSend,
+  onCancel,
+  onAccept,
+  onUnfriend,
+  onMessage,
+}: {
+  status: FriendStatus | null;
+  loading: boolean;
+  actionLoading: boolean;
+  onSend: () => void;
+  onCancel: () => void;
+  onAccept: () => void;
+  onUnfriend: () => void;
+  onMessage: () => void;
+}) {
+  const colors = useThemeColors();
+  if (loading) {
+    return (
+      <View className="mt-3 h-9 w-full items-center justify-center">
+        <ActivityIndicator size="small" />
+      </View>
+    );
+  }
+
+  const renderPrimary = () => {
+    switch (status) {
+      case 'FRIENDS':
+        return (
+          <Button
+            variant="secondary"
+            className="flex-1 flex-row gap-1"
+            disabled={actionLoading}
+            onPress={onUnfriend}>
+            <Ionicons name="people" size={16} color={colors.foreground} />
+            <Text>Bạn bè</Text>
+          </Button>
+        );
+      case 'PENDING_SENT':
+        return (
+          <Button
+            variant="secondary"
+            className="flex-1 flex-row gap-1"
+            disabled={actionLoading}
+            onPress={onCancel}>
+            <Ionicons name="close" size={16} color={colors.foreground} />
+            <Text>Hủy lời mời</Text>
+          </Button>
+        );
+      case 'PENDING_RECEIVED':
+        return (
+          <Button
+            className="flex-1 flex-row gap-1"
+            disabled={actionLoading}
+            onPress={onAccept}>
+            <Ionicons name="checkmark" size={16} color={colors.primaryForeground} />
+            <Text className="text-primary-foreground">Chấp nhận</Text>
+          </Button>
+        );
+      default:
+        return (
+          <Button
+            className="flex-1 flex-row gap-1"
+            disabled={actionLoading}
+            onPress={onSend}>
+            <Ionicons name="person-add" size={16} color={colors.primaryForeground} />
+            <Text className="text-primary-foreground">Thêm bạn bè</Text>
+          </Button>
+        );
+    }
+  };
+
+  return (
+    <View className="mt-3 w-full flex-row gap-2 px-4">
+      {renderPrimary()}
+      <Button variant="outline" className="flex-1 flex-row gap-1" onPress={onMessage}>
+        <Ionicons name="chatbubble-outline" size={16} color={colors.foreground} />
+        <Text>Nhắn tin</Text>
+      </Button>
+    </View>
+  );
+}
+
