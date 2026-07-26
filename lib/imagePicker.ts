@@ -3,26 +3,9 @@ import * as ImagePicker from 'expo-image-picker';
 import { Alert } from 'react-native';
 import { inferMediaType, type PickedMedia } from '@/lib/mediaUpload';
 
-// Chọn 1 ảnh (dùng cho avatar/cover). Trả về URI hoặc null.
-export async function pickImage(aspect?: [number, number]): Promise<string | null> {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-        Alert.alert('Cần quyền truy cập', 'Hãy cấp quyền truy cập thư viện ảnh để tiếp tục.');
-        return null;
-    }
+// Chọn 1 ảnh kèm metadata (URI + mimeType + fileName) — dùng cho avatar/cover của user & nhóm.
+// mimeType cần cho việc đặt Content-Type khi upload lên storage.
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        allowsEditing: true,
-        aspect,
-        quality: 0.8,
-    });
-
-    if (result.canceled || !result.assets?.length) return null;
-    return result.assets[0].uri;
-}
-
-// Chọn 1 ảnh kèm metadata (URI + mimeType + fileName) — dùng cho avatar/cover nhóm.
 export async function pickImageWithMeta(
     aspect?: [number, number],
 ): Promise<{ uri: string; mimeType?: string | null; fileName?: string | null } | null> {

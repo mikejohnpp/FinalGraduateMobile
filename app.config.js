@@ -58,6 +58,14 @@ export default {
     extra: {
       serverApi: process.env.SERVER_API ?? 'http://localhost:8080',
       wsUrl: process.env.WS_URL ?? 'ws://localhost:9091/app_socket',
+      // Storage: 'r2' (mặc định, khớp web) hoặc 'supabase' (fallback).
+      storageProvider: process.env.STORAGE_PROVIDER ?? 'r2',
+      // Cloudflare R2 — dùng S3-compatible API, ký SigV4 ở lib/mediaStorage/sigv4.ts.
+      r2AccountId: process.env.R2_ACCOUNT_ID ?? '',
+      r2AccessKeyId: process.env.R2_ACCESS_KEY_ID ?? '',
+      r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY ?? '',
+      r2Bucket: process.env.R2_BUCKET ?? 'media',
+      r2PublicUrl: process.env.R2_PUBLIC_URL ?? '',
       supabaseUrl: process.env.SUPABASE_URL ?? '',
       supabaseKey: process.env.SUPABASE_KEY ?? '',
       supabaseMediaBucket: process.env.SUPABASE_MEDIA_BUCKET ?? 'media',

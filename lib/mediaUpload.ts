@@ -1,10 +1,9 @@
-// Tiện ích upload media lên Supabase Storage — port từ web (src/utils/mediaUpload.ts).
-// Khác biệt: RN không có File; nhận URI từ expo-image-picker, đọc file qua expo-file-system
-// rồi decode base64 → ArrayBuffer để upload (Supabase RN không nhận Blob trực tiếp ổn định).
+// Tiện ích upload media — port từ web (src/utils/mediaUpload.ts).
+// Khác biệt: RN không có File; nhận URI từ expo-image-picker/document-picker.
+// Việc upload thực tế do lớp lib/mediaStorage đảm nhiệm (R2 mặc định, Supabase fallback).
 import * as FileSystem from 'expo-file-system/legacy';
 
-import { decode } from 'base64-arraybuffer';
-import { supabase, MEDIA_BUCKET } from '@/lib/supabase';
+import { uploadToStorage } from '@/lib/mediaStorage';
 import type { MediaInput, MediaType } from '@/types';
 
 // Giới hạn kích thước upload (MB) — mặc định 25MB (khớp web).
@@ -34,7 +33,7 @@ export function inferMediaType(mime?: string | null): MediaType {
 }
 
 // Suy ra contentType từ tên file / mime.
-function resolveContentType(item: PickedMedia): string {
+export function resolveContentType(item: PickedMedia): string {
     if (item.mimeType) return item.mimeType;
     const name = item.fileName ?? item.uri;
     const ext = name.split('.').pop()?.toLowerCase() ?? '';
@@ -61,49 +60,18 @@ function resolveContentType(item: PickedMedia): string {
     }
 }
 
-// Sinh tên object duy nhất, giữ đuôi file gốc.
-function buildObjectPath(item: PickedMedia): string {
-    const name = item.fileName ?? item.uri;
-    const dotIdx = name.lastIndexOf('.');
-    const ext = dotIdx >= 0 ? name.slice(dotIdx) : '';
-    const rand = Math.random().toString(16).slice(2, 8);
-    return `${Date.now()}-${rand}${ext}`;
-}
-
-// Đọc file tại URI → base64 → ArrayBuffer.
-async function readAsArrayBuffer(uri: string): Promise<ArrayBuffer> {
-    const base64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
-    });
-    return decode(base64);
-}
-
-// Upload một media (từ URI) lên Supabase và trả về MediaInput (url + mediaType).
+// Upload một media (từ URI) và trả về MediaInput (url + mediaType).
 export async function uploadPickedMedia(item: PickedMedia): Promise<MediaInput> {
     if (item.fileSize && item.fileSize > MAX_MEDIA_SIZE_MB * 1024 * 1024) {
         throw new Error(`Tệp vượt quá ${MAX_MEDIA_SIZE_MB}MB`);
     }
 
-    const path = buildObjectPath(item);
-    const contentType = resolveContentType(item);
-    const data = await readAsArrayBuffer(item.uri);
+    const { url } = await uploadToStorage(
+        { uri: item.uri, contentType: resolveContentType(item) },
+        item.fileName ?? item.uri,
+    );
 
-    const { error } = await supabase.storage.from(MEDIA_BUCKET).upload(path, data, {
-        cacheControl: '3600',
-        upsert: false,
-        contentType,
-    });
-
-    if (error) {
-        throw new Error(`Upload thất bại: ${error.message}`);
-    }
-
-    const { data: pub } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
-    if (!pub?.publicUrl) {
-        throw new Error('Không lấy được đường dẫn công khai của tệp');
-    }
-
-    return { url: pub.publicUrl, mediaType: item.mediaType };
+    return { url, mediaType: item.mediaType };
 }
 
 // Upload nhiều media, gán position theo thứ tự mảng đầu vào.
@@ -112,9 +80,9 @@ export async function uploadPickedMediaFiles(items: PickedMedia[]): Promise<Medi
     return uploaded.map((m, index) => ({ ...m, position: index }));
 }
 
-// Upload một ảnh (avatar/cover nhóm) lên Supabase và trả về public URL.
-// Chỉ chấp nhận ảnh. Dùng cho useGroupImage.
-export async function uploadImageToSupabase(uri: string, mimeType?: string | null): Promise<string> {
+// Upload một ảnh (avatar/cover của user hoặc nhóm) và trả về public URL.
+// Chỉ chấp nhận ảnh. Đối ứng uploadImageToSupabase của web.
+export async function uploadImageToStorage(uri: string, mimeType?: string | null): Promise<string> {
     const item: PickedMedia = { uri, mediaType: 'IMAGE', mimeType };
     const contentType = resolveContentType(item);
     if (!contentType.startsWith('image/')) {
@@ -125,7 +93,6 @@ export async function uploadImageToSupabase(uri: string, mimeType?: string | nul
     if (info.exists && info.size && info.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
         throw new Error(`Ảnh vượt quá ${MAX_IMAGE_SIZE_MB}MB`);
     }
-
 
     const media = await uploadPickedMedia(item);
     return media.url;

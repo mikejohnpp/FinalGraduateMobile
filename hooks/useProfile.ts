@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { API } from '@/lib/constants';
-import { resolveMediaUrl } from '@/lib/media';
+import { uploadImageToStorage } from '@/lib/mediaUpload';
 import postService from '@/services/postService';
 import userService from '@/services/userService';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -94,25 +94,26 @@ export function useUpdateProfile() {
 }
 
 // Upload ảnh đại diện (nhận URI từ image picker).
+// Giống web: đưa ảnh lên storage rồi lưu URL qua PUT /users/profile.
 export function useUploadAvatar() {
     const dispatch = useAppDispatch();
     const userId = useAppSelector((r) => r.user.userId);
     const [loading, setLoading] = useState(false);
 
     const upload = useCallback(
-        async (uri: string): Promise<string | null> => {
+        async (uri: string, mimeType?: string | null): Promise<string | null> => {
             if (!userId) return null;
             setLoading(true);
             try {
-                const res = await userService.uploadAvatar(userId, uri);
+                const url = await uploadImageToStorage(uri, mimeType);
+                const res = await userService.updateProfile(userId, { avatar: url });
                 if (res?.data) {
-                    const url = resolveMediaUrl(res.data);
-                    dispatch(userActions.updateProfile({ avatar: url }));
+                    dispatch(userActions.setProfile(res.data));
                     return url;
                 }
                 return null;
-            } catch {
-                Alert.alert('Lỗi', 'Upload ảnh đại diện thất bại');
+            } catch (e: any) {
+                Alert.alert('Lỗi', e?.message ?? 'Upload ảnh đại diện thất bại');
                 return null;
             } finally {
                 setLoading(false);
@@ -125,25 +126,26 @@ export function useUploadAvatar() {
 }
 
 // Upload ảnh bìa (nhận URI từ image picker).
+// Giống web: đưa ảnh lên storage rồi lưu URL qua PUT /users/profile.
 export function useUploadCover() {
     const dispatch = useAppDispatch();
     const userId = useAppSelector((r) => r.user.userId);
     const [loading, setLoading] = useState(false);
 
     const upload = useCallback(
-        async (uri: string): Promise<string | null> => {
+        async (uri: string, mimeType?: string | null): Promise<string | null> => {
             if (!userId) return null;
             setLoading(true);
             try {
-                const res = await userService.uploadCover(userId, uri);
+                const url = await uploadImageToStorage(uri, mimeType);
+                const res = await userService.updateProfile(userId, { coverPhoto: url });
                 if (res?.data) {
-                    const url = resolveMediaUrl(res.data);
-                    dispatch(userActions.updateProfile({ coverPhoto: url }));
+                    dispatch(userActions.setProfile(res.data));
                     return url;
                 }
                 return null;
-            } catch {
-                Alert.alert('Lỗi', 'Upload ảnh bìa thất bại');
+            } catch (e: any) {
+                Alert.alert('Lỗi', e?.message ?? 'Upload ảnh bìa thất bại');
                 return null;
             } finally {
                 setLoading(false);

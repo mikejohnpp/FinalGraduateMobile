@@ -122,40 +122,11 @@ export class UserService extends BaseService {
         }
     }
 
-    // Upload ảnh: RN dùng FormData với object { uri, name, type } thay cho File của web.
-    private buildImageFormData(uri: string): FormData {
-        const formData = new FormData();
-        const fileName = uri.split('/').pop() ?? `upload-${Date.now()}.jpg`;
-        const match = /\.(\w+)$/.exec(fileName);
-        const ext = match ? match[1].toLowerCase() : 'jpg';
-        const type = ext === 'png' ? 'image/png' : 'image/jpeg';
-        // @ts-expect-error — RN FormData chấp nhận shape { uri, name, type }
-        formData.append('file', { uri, name: fileName, type });
-        return formData;
-    }
-
-    async uploadAvatar(userId: number, uri: string): Promise<ApiResultGeneric<string> | undefined> {
-        try {
-            return await http.postWithFile<ApiResultGeneric<string>>(
-                `/${API.PROFILE.AVATAR}?userId=${userId}`,
-                this.buildImageFormData(uri),
-            );
-        } catch (e) {
-            return Promise.reject(e);
-        }
-    }
-
-    async uploadCover(userId: number, uri: string): Promise<ApiResultGeneric<string> | undefined> {
-        try {
-            return await http.postWithFile<ApiResultGeneric<string>>(
-                `/${API.PROFILE.COVER}?userId=${userId}`,
-                this.buildImageFormData(uri),
-            );
-        } catch (e) {
-            return Promise.reject(e);
-        }
-    }
+    // Ghi chú: ảnh đại diện / ảnh bìa được upload trực tiếp lên storage (lib/mediaStorage)
+    // rồi lưu URL qua updateProfile — giống web. Endpoint multipart cũ
+    // (POST /users/profile/avatar|cover) không còn dùng ở mobile.
 }
+
 
 
 export default new UserService();

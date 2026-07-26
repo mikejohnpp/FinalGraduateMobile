@@ -1,9 +1,9 @@
 // useStory hooks — port từ web (src/hooks/useStory.tsx). Alert thay cho toast.
-// Khác biệt: upload media nhận URI (từ expo-image-picker) → Supabase, thay cho File của web.
+// Khác biệt: upload media nhận URI (từ expo-image-picker) → storage, thay cho File của web.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
 import storyService from '@/services/storyService';
-import { uploadImageToSupabase, uploadPickedMedia } from '@/lib/mediaUpload';
+import { uploadImageToStorage, uploadPickedMedia } from '@/lib/mediaUpload';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { storyActions } from '@/store/storySlice';
 import type { IGroupedStory, IStoryDTO } from '@/types';
@@ -58,7 +58,7 @@ export function useCreateStory() {
                 let urlVideo: string | undefined;
 
                 if (storyType === 'image' && mediaUri) {
-                    urlImage = await uploadImageToSupabase(mediaUri, mediaMime);
+                    urlImage = await uploadImageToStorage(mediaUri, mediaMime);
                 } else if (storyType === 'video' && mediaUri) {
                     // Video: dùng uploadPickedMedia (không giới hạn ảnh) → lấy URL.
                     const uploaded = await uploadPickedMedia({

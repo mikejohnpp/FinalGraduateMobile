@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { API } from '@/lib/constants';
-import { uploadImageToSupabase } from '@/lib/mediaUpload';
+import { uploadImageToStorage } from '@/lib/mediaUpload';
 import groupService from '@/services/groupService';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { groupActions } from '@/store/groupSlice';
@@ -244,7 +244,7 @@ export function useSingleGroupPosts(groupId: number) {
 }
 
 // useGroupImage — upload ảnh đại diện / ảnh bìa nhóm (chỉ ADMIN).
-// Nhận URI (từ image picker) + mimeType, upload lên Supabase rồi lưu link qua BE.
+// Nhận URI (từ image picker) + mimeType, upload lên storage (R2) rồi lưu link qua BE.
 export function useGroupImage() {
     const userId = useAppSelector((r) => r.user.userId);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -258,7 +258,7 @@ export function useGroupImage() {
         if (!userId) return null;
         setUploadingAvatar(true);
         try {
-            const url = await uploadImageToSupabase(uri, mimeType);
+            const url = await uploadImageToStorage(uri, mimeType);
             const group = await groupService.updateGroupAvatar(groupId, userId, url);
             if (group) Alert.alert('Thành công', 'Cập nhật ảnh đại diện nhóm thành công!');
             return group;
@@ -281,7 +281,7 @@ export function useGroupImage() {
         if (!userId) return null;
         setUploadingCover(true);
         try {
-            const url = await uploadImageToSupabase(uri, mimeType);
+            const url = await uploadImageToStorage(uri, mimeType);
             const group = await groupService.updateGroupCover(groupId, userId, url);
             if (group) Alert.alert('Thành công', 'Cập nhật ảnh bìa nhóm thành công!');
             return group;

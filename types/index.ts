@@ -98,7 +98,9 @@ export interface UserProfileDTO {
     language: string | null;
 }
 
+// Request body cho PUT /users/profile?userId={userId} — partial update (khớp web).
 export interface IProfileUpdate {
+    userName?: string;
     nickName?: string;
     bio?: string;
     location?: string;
@@ -111,6 +113,9 @@ export interface IProfileUpdate {
     language?: string;
     dateOfBirth?: string;
     phoneNumber?: number;
+    // Link ảnh đại diện / ảnh bìa sau khi đã upload lên storage.
+    avatar?: string;
+    coverPhoto?: string;
 }
 
 // ---- Post ----

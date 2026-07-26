@@ -9,7 +9,7 @@ import { PostCard } from '@/components/PostCard';
 import { ProfileReels } from '@/components/ProfileReels';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
-import { pickImage } from '@/lib/imagePicker';
+import { pickImageWithMeta } from '@/lib/imagePicker';
 import { resolveMediaUrl } from '@/lib/media';
 import { useThemeColors } from '@/hooks/useTheme';
 import { useProfile, useUploadAvatar, useUploadCover, useUserPosts } from '@/hooks/useProfile';
@@ -40,13 +40,13 @@ export default function ProfileScreen() {
   );
 
   const handlePickAvatar = useCallback(async () => {
-    const uri = await pickImage([1, 1]);
-    if (uri) await uploadAvatar(uri);
+    const picked = await pickImageWithMeta([1, 1]);
+    if (picked) await uploadAvatar(picked.uri, picked.mimeType);
   }, [uploadAvatar]);
 
   const handlePickCover = useCallback(async () => {
-    const uri = await pickImage([16, 9]);
-    if (uri) await uploadCover(uri);
+    const picked = await pickImageWithMeta([16, 9]);
+    if (picked) await uploadCover(picked.uri, picked.mimeType);
   }, [uploadCover]);
 
   if (loading && !profile) {
