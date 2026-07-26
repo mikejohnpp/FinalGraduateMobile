@@ -12,6 +12,12 @@ export class ChatService extends BaseService {
         return res.data ?? [];
     }
 
+    // Danh sách userId đang online (presence lưu ở Redis phía chat-service).
+    async getOnlineUsers(): Promise<number[]> {
+        const res = await http.get<ApiResultGeneric<number[]>>('chat/conversations/online');
+        return res.data ?? [];
+    }
+
     // Chi tiết hội thoại + tin nhắn (phân trang)
     async getConversationDetail(
         conversationId: number,

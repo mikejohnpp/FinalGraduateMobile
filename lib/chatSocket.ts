@@ -70,11 +70,30 @@ function getClient(): Client {
         },
         onStompError: (frame) => log('STOMP ERROR', frame.headers?.message, frame.body),
         onWebSocketError: (e: any) => log('WS ERROR', e?.message ?? String(e)),
-        onWebSocketClose: (e: any) => log('WS CLOSE', e?.code, e?.reason),
+        // Mạng rớt đột ngột thì onDisconnect không chắc chạy → phải dọn liveSubs ở đây,
+        // nếu không applySubscriptions() sau reconnect sẽ bỏ qua vì tưởng đã subscribe.
+        onWebSocketClose: (e: any) => {
+            log('WS CLOSE', e?.code, e?.reason);
+            liveSubs.clear();
+        },
     });
 
     return client;
 }
+
+// Kích hoạt kết nối nếu đã đăng nhập. Dùng cho các hàm subscribe* để việc đăng ký
+// topic ở bất kỳ màn nào cũng tự mở kết nối, không phụ thuộc useSocketConnection().
+function ensureActive(): void {
+    const c = getClient();
+    if (c.active || c.connected) return;
+    storage.get(AUTH_TOKEN_NAME).then((token) => {
+        if (!token) return;
+        if (c.active || c.connected) return;
+        log('activate (ensureActive)');
+        c.activate();
+    });
+}
+
 
 export function connectSocket(handlers?: {
     onConnect?: () => void;
@@ -116,8 +135,8 @@ export function subscribeConversation(
     const key = destination;
     // Đăng ký "mong muốn" — sẽ được áp dụng ngay nếu đã connect, hoặc khi connect sau.
     desiredTopics.set(key, { destination, callback });
-    log('want subscribe', destination, 'connected=', client?.connected ?? false);
-    getClient();
+    log('queue subscribe', destination, '(connected=', client?.connected ?? false, ')');
+    ensureActive();
     applySubscriptions();
     return liveSubs.get(key) ?? null;
 }
@@ -174,8 +193,8 @@ export function subscribeCallSignals(callback: (signal: any) => void): StompSubs
     const destination = '/user/queue/call';
     const key = destination;
     desiredTopics.set(key, { destination, callback });
-    log('want subscribe', destination, 'connected=', client?.connected ?? false);
-    getClient();
+    log('queue subscribe', destination, '(connected=', client?.connected ?? false, ')');
+    ensureActive();
     applySubscriptions();
     return liveSubs.get(key) ?? null;
 }

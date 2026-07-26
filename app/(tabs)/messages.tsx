@@ -17,6 +17,7 @@ export default function MessagesScreen() {
   useSocketConnection();
   const { conversations, loading, refetch } = useConversations();
   const userId = useAppSelector((r) => r.user.userId);
+  const onlineUsers = useAppSelector((r) => r.userOnline.onlineUsers);
   const router = useRouter();
   const [query, setQuery] = useState('');
 
@@ -39,6 +40,11 @@ export default function MessagesScreen() {
     const other = conv.members.find((m) => m.id !== userId);
     return resolveMediaUrl(other?.avatarUrl);
   };
+
+  // Online = có thành viên khác mình đang online (khớp cách web tính trong
+  // ConversationItem, nhưng bỏ chính mình để dot không luôn xanh).
+  const isConversationOnline = (conv: Conversation) =>
+    conv.members.some((m) => m.id !== userId && onlineUsers.includes(m.id));
 
   // Lọc hội thoại theo tên hiển thị (khớp web: tìm theo tiêu đề).
   const filtered = useMemo(() => {
@@ -80,29 +86,40 @@ export default function MessagesScreen() {
         renderItem={({ item }) => {
           const name = getDisplayName(item);
           const avatarUri = getAvatar(item);
+          const online = isConversationOnline(item);
           return (
             <Pressable
               className="flex-row items-center gap-3 px-4 py-3 active:bg-muted"
               onPress={() => router.push(`/chat/${item.id}`)}>
-              {avatarUri ? (
-                <Image
-                  source={{ uri: avatarUri }}
-                  style={{ width: 52, height: 52, borderRadius: 26 }}
-                  contentFit="cover"
+              <View className="relative">
+                {avatarUri ? (
+                  <Image
+                    source={{ uri: avatarUri }}
+                    style={{ width: 52, height: 52, borderRadius: 26 }}
+                    contentFit="cover"
+                  />
+                ) : (
+                  <View className="size-13 items-center justify-center rounded-full bg-muted" style={{ width: 52, height: 52 }}>
+                    <Text className="text-xl font-bold uppercase text-muted-foreground">
+                      {name?.charAt(0) || '?'}
+                    </Text>
+                  </View>
+                )}
+                {/* Dấu trạng thái: xanh = online, hổ phách = offline (giống web) */}
+                <View
+                  className={`absolute bottom-0 right-0 size-3.5 rounded-full border-2 border-background ${online ? 'bg-green-500' : 'bg-amber-400'}`}
                 />
-              ) : (
-                <View className="size-13 items-center justify-center rounded-full bg-muted" style={{ width: 52, height: 52 }}>
-                  <Text className="text-xl font-bold uppercase text-muted-foreground">
-                    {name?.charAt(0) || '?'}
-                  </Text>
-                </View>
-              )}
+              </View>
               <View className="flex-1">
                 <Text className="font-semibold" numberOfLines={1}>
                   {name}
                 </Text>
                 <Text variant="muted" className="text-xs" numberOfLines={1}>
-                  {item.group ? `${item.members.length} thành viên` : 'Nhấn để trò chuyện'}
+                  {item.group
+                    ? `${item.members.length} thành viên`
+                    : online
+                      ? 'Đang hoạt động'
+                      : 'Nhấn để trò chuyện'}
                 </Text>
               </View>
             </Pressable>

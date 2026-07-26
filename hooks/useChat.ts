@@ -1,5 +1,6 @@
 // useChat hooks — port ý tưởng từ web (MessengerLayout + chatSlice + chatSocket).
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 import {
     connectSocket,
     isConnected,
@@ -11,7 +12,13 @@ import {
 import chatService from '@/services/chatService';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { chatActions } from '@/store/chatSlice';
+import { userOnlineActions } from '@/store/userOnlineSlice';
 import type { ChatMessage, Conversation, MediaInput } from '@/types';
+
+// Nhịp làm mới danh sách online. BE không broadcast presence qua websocket
+// (chỉ lưu Redis + expose REST), nên phải poll giống web nhưng dày hơn để dot
+// online không bị lệch quá lâu.
+const ONLINE_POLL_INTERVAL = 20000;
 
 // useSocketConnection — kết nối STOMP khi đã đăng nhập.
 // Lưu ý: KHÔNG ngắt socket khi component unmount (giữ kết nối sống cho toàn app),
@@ -20,14 +27,51 @@ export function useSocketConnection() {
     const dispatch = useAppDispatch();
     const userId = useAppSelector((r) => r.user.userId);
 
+    // Lấy danh sách userId đang online. Web gọi một lần trong beforeConnect của
+    // STOMP client; ở đây tách ra để còn poll lại và làm mới khi app trở lại.
+    const fetchOnlineUsers = useCallback(async () => {
+        try {
+            const ids = await chatService.getOnlineUsers();
+            dispatch(userOnlineActions.setOnlineUsers(ids));
+        } catch (e) {
+            console.error('Lỗi khi tải danh sách người dùng online:', e);
+        }
+    }, [dispatch]);
+
     useEffect(() => {
-        if (!userId) return;
+        if (!userId) {
+            dispatch(userOnlineActions.clearOnlineUsers());
+            return;
+        }
         connectSocket({
-            onConnect: () => dispatch(chatActions.setConnected(true)),
+            onConnect: () => {
+                dispatch(chatActions.setConnected(true));
+                fetchOnlineUsers();
+            },
             onDisconnect: () => dispatch(chatActions.setConnected(false)),
         });
+        // Socket có thể đã connected trước khi hook này chạy → gọi luôn một lần.
+        fetchOnlineUsers();
+
+        const timer = setInterval(fetchOnlineUsers, ONLINE_POLL_INTERVAL);
+        // App từ background trở lại thì snapshot cũ thường đã lỗi thời.
+        const appStateSub = AppState.addEventListener('change', (state) => {
+            if (state === 'active') fetchOnlineUsers();
+        });
+
+        return () => {
+            clearInterval(timer);
+            appStateSub.remove();
+        };
         // Không gọi disconnectSocket() ở cleanup để tránh rớt kết nối khi điều hướng.
-    }, [userId, dispatch]);
+    }, [userId, dispatch, fetchOnlineUsers]);
+}
+
+// useIsUserOnline — tiện dụng cho UI: kiểm tra một userId có đang online.
+export function useIsUserOnline(targetUserId?: number | null): boolean {
+    const onlineUsers = useAppSelector((r) => r.userOnline.onlineUsers);
+    if (!targetUserId) return false;
+    return onlineUsers.includes(targetUserId);
 }
 
 // useConversations — danh sách hội thoại của người dùng.

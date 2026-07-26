@@ -46,6 +46,14 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
     const callTypeRef = useRef<'AUDIO' | 'VIDEO'>('VIDEO');
     const callStartTimeRef = useRef<number | null>(null);
 
+    // ICE candidate của đầu bên kia có thể tới TRƯỚC tín hiệu OFFER/ANSWER, mà
+    // addIceCandidate lại yêu cầu peer connection đã có remote description
+    // (nếu không sẽ ném "The remote description was null"). Vì vậy phải đệm các
+    // candidate đến sớm rồi nạp một lượt ngay sau khi setRemoteDescription xong.
+    const pendingCandidatesRef = useRef<any[]>([]);
+    const hasRemoteDescRef = useRef(false);
+
+
     const ringtoneAudio = useRef<AudioPlayer | null>(null);
     const callingAudio = useRef<AudioPlayer | null>(null);
 
@@ -107,7 +115,25 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
         peerConnection.current = null;
         conversationIdRef.current = null;
         callStartTimeRef.current = null;
+        pendingCandidatesRef.current = [];
+        hasRemoteDescRef.current = false;
     }, []);
+
+    // Nạp các ICE candidate đã đệm sau khi remote description sẵn sàng.
+    const flushPendingCandidates = useCallback(async () => {
+        const pc = peerConnection.current;
+        if (!pc) return;
+        const queued = pendingCandidatesRef.current;
+        pendingCandidatesRef.current = [];
+        for (const c of queued) {
+            try {
+                await pc.addIceCandidate(new RTCIceCandidate(c));
+            } catch (e) {
+                console.log('addIceCandidate (queued) failed', e);
+            }
+        }
+    }, []);
+
 
     useEffect(() => {
         let timeoutId: NodeJS.Timeout;
@@ -134,7 +160,10 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
         if (peerConnection.current) {
             peerConnection.current.close();
         }
+        pendingCandidatesRef.current = [];
+        hasRemoteDescRef.current = false;
         const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+
         pc.onicecandidate = (event) => {
             if (event.candidate) {
                 sendCallSignal('ICE', {
@@ -281,24 +310,39 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
                     setCallState('RINGING');
                     const pc = initPeerConnection(callerId);
                     await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: payload.sdpOffer }));
+                    hasRemoteDescRef.current = true;
+                    await flushPendingCandidates();
                     break;
                 }
                 case 'ANSWER':
                     if (peerConnection.current) {
                         await peerConnection.current.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: payload.sdpAnswer }));
+                        hasRemoteDescRef.current = true;
+                        await flushPendingCandidates();
                         setCallState('IN_CALL');
                         callStartTimeRef.current = Date.now();
                     }
                     break;
-                case 'ICE':
-                    if (peerConnection.current) {
-                        await peerConnection.current.addIceCandidate(new RTCIceCandidate({
-                            candidate: payload.candidate,
-                            sdpMid: payload.sdpMid,
-                            sdpMLineIndex: payload.sdpMLineIndex,
-                        }));
+                case 'ICE': {
+                    const candidate = {
+                        candidate: payload.candidate,
+                        sdpMid: payload.sdpMid,
+                        sdpMLineIndex: payload.sdpMLineIndex,
+                    };
+                    // Chưa có remote description → đệm lại, tránh lỗi
+                    // "The remote description was null".
+                    if (!peerConnection.current || !hasRemoteDescRef.current) {
+                        pendingCandidatesRef.current.push(candidate);
+                        break;
+                    }
+                    try {
+                        await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
+                    } catch (e) {
+                        console.log('addIceCandidate failed', e);
                     }
                     break;
+                }
+
                 case 'REJECT':
                 case 'HANGUP':
                     cleanup();
@@ -309,7 +353,8 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
         return () => {
             unsubscribeCallSignals();
         };
-    }, [cleanup, currentUserId, initPeerConnection]);
+    }, [cleanup, currentUserId, initPeerConnection, flushPendingCandidates]);
+
 
     const contextValue: CallContextType = {
         callState,

@@ -142,7 +142,7 @@ function ReelItem({
           style={{ flex: 1 }}
           contentFit="contain"
           nativeControls={false}
-          allowsFullscreen={false}
+          fullscreenOptions={{ enable: false }}
         />
       )}
 

@@ -9,6 +9,7 @@ import chatReducer from '@/store/chatSlice';
 import notificationReducer from '@/store/notificationSlice';
 import storyReducer from '@/store/storySlice';
 import reelReducer from '@/store/reelSlice';
+import userOnlineReducer from '@/store/userOnlineSlice';
 
 export const store = configureStore({
     reducer: {
@@ -21,6 +22,7 @@ export const store = configureStore({
         notification: notificationReducer,
         story: storyReducer,
         reel: reelReducer,
+        userOnline: userOnlineReducer,
     },
 });
 

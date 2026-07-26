@@ -17,7 +17,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import Feather from '@expo/vector-icons/Feather';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
-import { useConversation, useSocketConnection } from '@/hooks/useChat';
+import { useConversation, useIsUserOnline, useSocketConnection } from '@/hooks/useChat';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { pickMedia } from '@/lib/imagePicker';
 import { uploadPickedMedia } from '@/lib/mediaUpload';
@@ -105,6 +105,9 @@ export default function ChatScreen() {
       ? chatInfo.members.find((m: any) => m.id !== userId) || chatInfo.members[0]
       : undefined;
 
+  // Chỉ hội thoại 1-1 mới hiển thị trạng thái của đối phương.
+  const otherOnline = useIsUserOnline(otherMember?.id);
+
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -118,6 +121,16 @@ export default function ChatScreen() {
           <Text variant="large" numberOfLines={1}>
             {title}
           </Text>
+          {otherMember && (
+            <View className="flex-row items-center gap-1">
+              <View
+                className={`size-2 rounded-full ${otherOnline ? 'bg-green-500' : 'bg-amber-400'}`}
+              />
+              <Text variant="muted" className="text-xs">
+                {otherOnline ? 'Đang hoạt động' : 'Không hoạt động'}
+              </Text>
+            </View>
+          )}
         </Pressable>
 
         {chatInfo?.group === false && otherMember && (
