@@ -17,7 +17,9 @@ import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import chatService from '@/services/chatService';
 import friendService from '@/services/friendService';
+import { useOpenProfile } from '@/hooks/useOpenProfile';
 import { API } from '@/lib/constants';
+
 import { resolveMediaUrl } from '@/lib/media';
 import { useAppSelector } from '@/store/hooks';
 import type { ChatMessage, CursorPageResponse, IFriendship, MessageChat } from '@/types';
@@ -28,7 +30,9 @@ export default function ChatInfoScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const conversationId = Number(id);
   const router = useRouter();
+  const openProfile = useOpenProfile();
   const userId = useAppSelector((r) => r.user.userId);
+
 
   const [detail, setDetail] = useState<MessageChat | null>(null);
   const [media, setMedia] = useState<ChatMessage[]>([]);
@@ -111,7 +115,12 @@ export default function ChatInfoScreen() {
               {members.map((m) => {
                 const avatarUri = resolveMediaUrl(m.avatarUrl);
                 return (
-                  <View key={m.id} className="flex-row items-center gap-3 py-2">
+                  <Pressable
+                    key={m.id}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Xem hồ sơ của ${m.username}`}
+                    className="flex-row items-center gap-3 py-2 active:opacity-70"
+                    onPress={() => openProfile(m.id)}>
                     {avatarUri ? (
                       <Image
                         source={{ uri: avatarUri }}
@@ -129,9 +138,10 @@ export default function ChatInfoScreen() {
                       {m.username}
                       {m.id === userId ? ' (Bạn)' : ''}
                     </Text>
-                  </View>
+                  </Pressable>
                 );
               })}
+
             </View>
 
             {/* Tabs media */}

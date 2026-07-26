@@ -10,6 +10,41 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { userActions } from '@/store/userSlice';
 import type { IPost, IProfileUpdate, UserProfileDTO } from '@/types';
 
+// Lấy profile của người dùng đang đăng nhập — đọc từ store, chưa có thì fetch.
+// Port từ web (useCurrentProfile) để màn hình không phải tự đọc store.
+export function useCurrentProfile() {
+    const dispatch = useAppDispatch();
+    const userId = useAppSelector((r) => r.user.userId);
+    const profile = useAppSelector((r) => r.user.profile);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (!userId || profile) return;
+        let cancelled = false;
+
+        const fetchProfile = async () => {
+            setLoading(true);
+            try {
+                const res = await userService.getProfile(userId);
+                if (!cancelled && res?.data) {
+                    dispatch(userActions.setProfile(res.data));
+                }
+            } catch {
+                // Bỏ qua: UI sẽ hiện trạng thái không tải được.
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        };
+
+        fetchProfile();
+        return () => {
+            cancelled = true;
+        };
+    }, [userId, profile, dispatch]);
+
+    return { profile, userId, loading };
+}
+
 // Lấy profile của một user + tính isOwner. Nếu là chính mình → cập nhật store.
 export function useProfile(userId: number | string | undefined) {
     const dispatch = useAppDispatch();

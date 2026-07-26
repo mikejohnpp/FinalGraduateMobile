@@ -14,6 +14,7 @@ import {
   useUnreadCount,
 } from '@/hooks/useNotification';
 import { useNotificationClick } from '@/hooks/useNotificationClick';
+import { useOpenProfile } from '@/hooks/useOpenProfile';
 import { resolveMediaUrl } from '@/lib/media';
 import { timeAgo } from '@/lib/time';
 import type { INotification, NotificationType } from '@/types';
@@ -124,17 +125,25 @@ export default function NotificationsScreen() {
 
 function NotificationRow({ item, onPress }: { item: INotification; onPress: () => void }) {
   const colors = useThemeColors();
+  const openProfile = useOpenProfile();
   const avatarUri = resolveMediaUrl(item.actor?.avatar);
   const badge = iconFor(item.type, colors.mutedForeground);
 
   const actorName = item.actor?.nickName || item.actor?.name || 'Ai đó';
+  const actorId = item.actor?.id;
 
   return (
     <Pressable
       className={`flex-row items-center gap-3 px-4 py-3 active:bg-muted ${item.isRead ? '' : 'bg-primary/5'}`}
       onPress={onPress}>
-      {/* Avatar + badge loại */}
-      <View>
+      {/* Avatar + badge loại — bấm avatar mở hồ sơ người gây ra thông báo,
+          bấm phần còn lại của hàng vẫn đi tới nội dung liên quan. */}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Xem hồ sơ của ${actorName}`}
+        disabled={!actorId}
+        className="active:opacity-70"
+        onPress={() => openProfile(actorId)}>
         {avatarUri ? (
           <Image
             source={{ uri: avatarUri }}
@@ -153,11 +162,16 @@ function NotificationRow({ item, onPress }: { item: INotification; onPress: () =
           style={{ backgroundColor: badge.color }}>
           <Ionicons name={badge.name} size={10} color="white" />
         </View>
-      </View>
+      </Pressable>
 
       <View className="flex-1">
         <Text numberOfLines={2} className={item.isRead ? 'text-muted-foreground' : 'text-foreground'}>
-          <Text className="font-semibold">{actorName}</Text> {item.message}
+          <Text
+            className="font-semibold"
+            onPress={actorId ? () => openProfile(actorId) : undefined}>
+            {actorName}
+          </Text>{' '}
+          {item.message}
         </Text>
         <Text variant="muted" className="mt-0.5 text-xs">
           {timeAgo(item.createdAt)}

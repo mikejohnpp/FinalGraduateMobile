@@ -7,7 +7,9 @@ import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '@/components/ui/text';
 import { useConversations, useSocketConnection } from '@/hooks/useChat';
+import { useOpenProfile } from '@/hooks/useOpenProfile';
 import { resolveMediaUrl } from '@/lib/media';
+
 import { useAppSelector } from '@/store/hooks';
 import type { Conversation } from '@/types';
 import { useThemeColors } from '@/hooks/useTheme';
@@ -15,8 +17,10 @@ import { useThemeColors } from '@/hooks/useTheme';
 export default function MessagesScreen() {
   const colors = useThemeColors();
   useSocketConnection();
+  const openProfile = useOpenProfile();
   const { conversations, loading, refetch } = useConversations();
   const userId = useAppSelector((r) => r.user.userId);
+
   const onlineUsers = useAppSelector((r) => r.userOnline.onlineUsers);
   const router = useRouter();
   const [query, setQuery] = useState('');
@@ -40,6 +44,14 @@ export default function MessagesScreen() {
     const other = conv.members.find((m) => m.id !== userId);
     return resolveMediaUrl(other?.avatarUrl);
   };
+
+  // Chỉ hội thoại 1-1 mới có "đối phương" để mở hồ sơ; chat nhóm thì avatar/tên
+  // đại diện cho hội thoại chứ không phải một người dùng.
+  const getPeerId = (conv: Conversation) => {
+    if (conv.group) return undefined;
+    return conv.members.find((m) => m.id !== userId)?.id;
+  };
+
 
   // Online = có thành viên khác mình đang online (khớp cách web tính trong
   // ConversationItem, nhưng bỏ chính mình để dot không luôn xanh).
@@ -87,11 +99,20 @@ export default function MessagesScreen() {
           const name = getDisplayName(item);
           const avatarUri = getAvatar(item);
           const online = isConversationOnline(item);
+          const peerId = getPeerId(item);
           return (
             <Pressable
               className="flex-row items-center gap-3 px-4 py-3 active:bg-muted"
               onPress={() => router.push(`/chat/${item.id}`)}>
-              <View className="relative">
+              {/* Chat 1-1: bấm avatar mở hồ sơ đối phương. Chat nhóm: avatar đại
+                  diện hội thoại nên vẫn mở đoạn chat. */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={peerId ? `Xem hồ sơ của ${name}` : `Mở đoạn chat ${name}`}
+                className="relative active:opacity-70"
+                onPress={() =>
+                  peerId ? openProfile(peerId) : router.push(`/chat/${item.id}`)
+                }>
                 {avatarUri ? (
                   <Image
                     source={{ uri: avatarUri }}
@@ -109,7 +130,8 @@ export default function MessagesScreen() {
                 <View
                   className={`absolute bottom-0 right-0 size-3.5 rounded-full border-2 border-background ${online ? 'bg-green-500' : 'bg-amber-400'}`}
                 />
-              </View>
+              </Pressable>
+
               <View className="flex-1">
                 <Text className="font-semibold" numberOfLines={1}>
                   {name}

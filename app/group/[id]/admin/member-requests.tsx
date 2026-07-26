@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, FlatList, ActivityIndicator } from 'react-native';
+import { View, FlatList, ActivityIndicator, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -7,12 +7,14 @@ import { Image } from 'expo-image';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useGroupMemberRequests } from '@/hooks/useGroupAdmin';
+import { useOpenProfile } from '@/hooks/useOpenProfile';
 import { useThemeColors } from '@/hooks/useTheme';
 
 export default function GroupAdminMemberRequestsScreen() {
   const colors = useThemeColors();
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
+    const openProfile = useOpenProfile();
     const {
         members,
         loading,
@@ -24,7 +26,12 @@ export default function GroupAdminMemberRequestsScreen() {
 
     const renderItem = ({ item }: { item: any }) => (
         <View className="bg-card p-4 rounded-xl shadow-sm border border-border mb-3">
-            <View className="flex-row items-center gap-3 mb-3">
+            {/* Avatar + tên bấm được để xem hồ sơ người xin vào nhóm */}
+            <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Xem hồ sơ của ${item.username}`}
+                className="flex-row items-center gap-3 mb-3 active:opacity-70"
+                onPress={() => openProfile(item.userId)}>
                 {item.avatarUrl ? (
                     <Image
                         source={{ uri: item.avatarUrl }}
@@ -46,7 +53,7 @@ export default function GroupAdminMemberRequestsScreen() {
                         </Text>
                     )}
                 </View>
-            </View>
+            </Pressable>
             <View className="flex-row gap-2">
                 <Button className="flex-1" onPress={() => approve(item.id)}>
                     <Text className="text-primary-foreground">Phê duyệt</Text>

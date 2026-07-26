@@ -1,6 +1,6 @@
 // CommentItem — một bình luận + phần replies (lazy load). Port ý tưởng từ web (CommentItem).
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Text } from '@/components/ui/text';
 import { SentimentIndicator } from '@/components/SentimentIndicator';
 import MediaGallery from '@/components/MediaGallery';
 import { useLikeComment, useReplies } from '@/hooks/useComment';
+import { useOpenProfile } from '@/hooks/useOpenProfile';
 import { useThemeColors } from '@/hooks/useTheme';
 
 import { resolveMediaUrl } from '@/lib/media';
@@ -23,6 +24,7 @@ interface CommentItemProps {
 
 export function CommentItem({ comment, postId, onReply, isReply = false }: CommentItemProps) {
   const colors = useThemeColors();
+  const openProfile = useOpenProfile();
   const avatarUri = resolveMediaUrl(comment.author.avatar);
   const displayName = comment.author.nickName || comment.author.name;
 
@@ -43,27 +45,40 @@ export function CommentItem({ comment, postId, onReply, isReply = false }: Comme
 
   return (
     <View className={isReply ? 'flex-row gap-2 pl-10' : 'flex-row gap-2'}>
-      {avatarUri ? (
-        <Image
-          source={{ uri: avatarUri }}
-          style={{ width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2 }}
-          contentFit="cover"
-        />
-      ) : (
-        <View
-          className="items-center justify-center rounded-full bg-muted"
-          style={{ width: avatarSize, height: avatarSize }}>
-          <Text className="text-xs font-semibold text-muted-foreground">
-            {displayName.charAt(0).toUpperCase()}
-          </Text>
-        </View>
-      )}
+      {/* Avatar bấm được để mở hồ sơ người bình luận */}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Xem hồ sơ của ${displayName}`}
+        className="active:opacity-70"
+        onPress={() => openProfile(comment.author.id)}>
+        {avatarUri ? (
+          <Image
+            source={{ uri: avatarUri }}
+            style={{ width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2 }}
+            contentFit="cover"
+          />
+        ) : (
+          <View
+            className="items-center justify-center rounded-full bg-muted"
+            style={{ width: avatarSize, height: avatarSize }}>
+            <Text className="text-xs font-semibold text-muted-foreground">
+              {displayName.charAt(0).toUpperCase()}
+            </Text>
+          </View>
+        )}
+      </Pressable>
 
       <View className="flex-1">
-        {/* Bubble */}
+        {/* Bubble — tên trong bong bóng cũng mở hồ sơ */}
         {(!!comment.content || comment.media?.length > 0) && (
           <View className="self-start rounded-2xl bg-muted px-3 py-2">
-            <Text className="text-sm font-semibold">{displayName}</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Xem hồ sơ của ${displayName}`}
+              className="self-start active:opacity-70"
+              onPress={() => openProfile(comment.author.id)}>
+              <Text className="text-sm font-semibold">{displayName}</Text>
+            </Pressable>
             {!!comment.content && <Text className="text-sm">{comment.content}</Text>}
           </View>
         )}

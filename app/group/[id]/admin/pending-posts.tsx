@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, FlatList, ActivityIndicator } from 'react-native';
+import { View, FlatList, ActivityIndicator, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -7,6 +7,7 @@ import { Image } from 'expo-image';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useGroupPendingPosts } from '@/hooks/useGroupAdmin';
+import { useOpenProfile } from '@/hooks/useOpenProfile';
 import { timeAgo } from '@/lib/time';
 import { useThemeColors } from '@/hooks/useTheme';
 
@@ -14,6 +15,7 @@ export default function GroupAdminPendingPostsScreen() {
   const colors = useThemeColors();
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
+    const openProfile = useOpenProfile();
     const {
         posts,
         loading,
@@ -25,7 +27,12 @@ export default function GroupAdminPendingPostsScreen() {
 
     const renderItem = ({ item }: { item: any }) => (
         <View className="bg-card p-4 rounded-xl shadow-sm border border-border mb-3">
-            <View className="flex-row items-center gap-3 mb-3">
+            {/* Avatar + tên tác giả bấm được để xem hồ sơ */}
+            <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Xem hồ sơ của ${item.authorName}`}
+                className="flex-row items-center gap-3 mb-3 active:opacity-70"
+                onPress={() => openProfile(item.authorId)}>
                 {item.authorAvatarUrl ? (
                     <Image
                         source={{ uri: item.authorAvatarUrl }}
@@ -45,7 +52,7 @@ export default function GroupAdminPendingPostsScreen() {
                         Đang chờ duyệt · {timeAgo(item.createdAt)}
                     </Text>
                 </View>
-            </View>
+            </Pressable>
 
             <Text className="mb-4 text-foreground">{item.content}</Text>
 

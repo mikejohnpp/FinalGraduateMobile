@@ -246,7 +246,7 @@ export default function GroupDetailScreen() {
             return (
               <Pressable
                 className="flex-row items-center gap-3 bg-card px-4 py-3 active:bg-muted"
-                onPress={() => router.push(`/profile/${item.userId}`)}>
+                onPress={() => router.push(`/user/${item.userId}`)}>
                 {memberAvatar ? (
                   <Image
                     source={{ uri: memberAvatar }}

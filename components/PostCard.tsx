@@ -1,12 +1,13 @@
 // PostCard — thẻ bài viết trên feed. Port ý tưởng từ web (src/components/PostCard.tsx).
 import { memo, useState, useEffect } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { SentimentIndicator } from '@/components/SentimentIndicator';
 import MediaGallery from '@/components/MediaGallery';
+import { useOpenProfile } from '@/hooks/useOpenProfile';
 import { useThemeColors } from '@/hooks/useTheme';
 import { resolveMediaUrl } from '@/lib/media';
 
@@ -23,6 +24,7 @@ interface PostCardProps {
 
 function PostCardBase({ post, onToggleLike, onComment, likeDisabled }: PostCardProps) {
   const colors = useThemeColors();
+  const openProfile = useOpenProfile();
   const [liked, setLiked] = useState(post.hasLiked ?? false);
   const [likesCount, setLikesCount] = useState(post.likeCount ?? 0);
 
@@ -52,25 +54,37 @@ function PostCardBase({ post, onToggleLike, onComment, likeDisabled }: PostCardP
 
   return (
     <View className="bg-card px-4 py-3">
-      {/* Header */}
+      {/* Header — avatar và tên bấm được để mở hồ sơ tác giả */}
       <View className="mb-3 flex-row items-center gap-3">
-        {avatarUri ? (
-          <Image
-            source={{ uri: avatarUri }}
-            style={{ width: 40, height: 40, borderRadius: 20 }}
-            contentFit="cover"
-          />
-        ) : (
-          <View className="size-10 items-center justify-center rounded-full bg-muted">
-            <Text className="font-semibold text-muted-foreground">
-              {displayName.charAt(0).toUpperCase()}
-            </Text>
-          </View>
-        )}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Xem hồ sơ của ${displayName}`}
+          className="active:opacity-70"
+          onPress={() => openProfile(post.author.id)}>
+          {avatarUri ? (
+            <Image
+              source={{ uri: avatarUri }}
+              style={{ width: 40, height: 40, borderRadius: 20 }}
+              contentFit="cover"
+            />
+          ) : (
+            <View className="size-10 items-center justify-center rounded-full bg-muted">
+              <Text className="font-semibold text-muted-foreground">
+                {displayName.charAt(0).toUpperCase()}
+              </Text>
+            </View>
+          )}
+        </Pressable>
         <View className="flex-1">
-          <Text className="font-semibold" numberOfLines={1}>
-            {displayName}
-          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Xem hồ sơ của ${displayName}`}
+            className="self-start active:opacity-70"
+            onPress={() => openProfile(post.author.id)}>
+            <Text className="font-semibold" numberOfLines={1}>
+              {displayName}
+            </Text>
+          </Pressable>
           <View className="flex-row items-center gap-2">
             <Text variant="muted" className="text-xs">
               {timeAgo(post.createdAt)}

@@ -79,8 +79,6 @@ export default function TabLayout() {
       {/* Các màn truy cập từ header bảng tin — ẩn khỏi tab bar */}
       <Tabs.Screen name="create" options={{ href: null }} />
       <Tabs.Screen name="messages" options={{ href: null }} />
-      {/* Ẩn màn demo cũ khỏi tab bar */}
-      <Tabs.Screen name="explore" options={{ href: null }} />
     </Tabs>
   );
 }
