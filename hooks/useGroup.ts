@@ -1,5 +1,5 @@
 // useGroup hooks — port từ web (src/hooks/useGroup.tsx). Alert thay cho toast.
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import { API } from '@/lib/constants';
 import { uploadImageToStorage } from '@/lib/mediaUpload';
@@ -154,12 +154,17 @@ export function useGroupFeed() {
     const groupFeed = useAppSelector((r) => r.group.groupFeed);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    // Dùng ref (như web) để tránh fetchFeed bị tạo lại theo `loading` gây vòng lặp gọi API.
+    const loadingRef = useRef(false);
+    const hasFetched = useRef(false);
 
     const fetchFeed = useCallback(
         async (isLoadMore = false) => {
             if (!userId) return;
-            if (isLoadMore && (!groupFeed.hasMore || loading)) return;
+            if (loadingRef.current) return;
+            if (isLoadMore && !groupFeed.hasMore) return;
 
+            loadingRef.current = true;
             setLoading(true);
             setError(null);
             try {
@@ -177,19 +182,21 @@ export function useGroupFeed() {
             } catch (e: any) {
                 setError(e?.response?.data?.message || 'Lỗi tải bảng tin nhóm');
             } finally {
+                loadingRef.current = false;
                 setLoading(false);
             }
         },
-        [userId, groupFeed.hasMore, groupFeed.nextCursor, loading, dispatch],
+        [userId, groupFeed.hasMore, groupFeed.nextCursor, dispatch],
     );
 
     useEffect(() => {
-        if (userId && groupFeed.items.length === 0) {
+        if (userId && !hasFetched.current) {
+            hasFetched.current = true;
             fetchFeed();
         }
-    }, [userId, groupFeed.items.length, fetchFeed]);
+    }, [userId, fetchFeed]);
 
-    const loadMore = () => fetchFeed(true);
+    const loadMore = useCallback(() => fetchFeed(true), [fetchFeed]);
 
     return { feed: groupFeed, loading, error, loadMore, refetch: () => fetchFeed(false) };
 }
@@ -240,7 +247,20 @@ export function useSingleGroupPosts(groupId: number) {
 
     const loadMore = () => fetchPosts(true);
 
-    return { posts, loading, error, hasMore, loadMore, refetch: () => fetchPosts(false) };
+    // Chèn bài viết mới lên đầu danh sách (dùng sau khi đăng bài trong nhóm) — như web.
+    const prependPost = useCallback((post: IPost) => {
+        setPosts((prev) => [post, ...prev]);
+    }, []);
+
+    return {
+        posts,
+        loading,
+        error,
+        hasMore,
+        loadMore,
+        refetch: () => fetchPosts(false),
+        prependPost,
+    };
 }
 
 // useGroupImage — upload ảnh đại diện / ảnh bìa nhóm (chỉ ADMIN).

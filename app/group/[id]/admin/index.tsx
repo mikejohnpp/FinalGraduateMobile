@@ -7,8 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useGroupStats } from '@/hooks/useGroupAdmin';
 import { useThemeColors } from '@/hooks/useTheme';
+import { goBackOr } from '@/lib/navigation';
+
+// Chiều cao vùng vẽ biểu đồ cột hoạt động 7 ngày.
+const CHART_HEIGHT = 140;
 
 export default function GroupAdminOverviewScreen() {
+
   const colors = useThemeColors();
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
@@ -19,7 +24,11 @@ export default function GroupAdminOverviewScreen() {
             <SafeAreaView className="flex-1 bg-background">
                 <Stack.Screen options={{ headerShown: false }} />
                 <View className="flex-row items-center gap-3 border-b border-border bg-card px-4 py-2">
-                    <Button variant="ghost" className="h-auto p-1" onPress={() => router.back()}>
+                    <Button
+                        variant="ghost"
+                        className="h-auto p-1"
+                        accessibilityLabel="Quay lại"
+                        onPress={() => goBackOr(router, `/group/${id}`)}>
                         <Ionicons name="arrow-back" size={22} color={colors.foreground} />
                     </Button>
                     <Text variant="large">Tổng quan</Text>
@@ -65,13 +74,21 @@ export default function GroupAdminOverviewScreen() {
         return 'remove';
     };
 
+    // Giá trị lớn nhất để chuẩn hoá chiều cao các cột.
+    const maxActivity = Math.max(0, ...(stats.weeklyActivity ?? []).map((d) => d.value));
+
+
     return (
         <SafeAreaView className="flex-1 bg-muted" edges={['top']}>
             <Stack.Screen options={{ headerShown: false }} />
             
             {/* Header */}
             <View className="flex-row items-center gap-3 border-b border-border bg-card px-4 py-2">
-                <Button variant="ghost" className="h-auto p-1" onPress={() => router.back()}>
+                <Button
+                    variant="ghost"
+                    className="h-auto p-1"
+                    accessibilityLabel="Quay lại"
+                    onPress={() => goBackOr(router, `/group/${id}`)}>
                     <Ionicons name="arrow-back" size={22} color={colors.foreground} />
                 </Button>
                 <Text variant="large">Tổng quan quản trị</Text>
@@ -174,10 +191,66 @@ export default function GroupAdminOverviewScreen() {
                                 </View>
                             </View>
                         </View>
+
+                        {/* Thành viên hoạt động — như web (ActivitySummary) */}
+                        <View className="flex-row items-center justify-between rounded-lg border border-border p-3">
+                            <View className="flex-row items-center gap-3">
+                                <Ionicons name="people-outline" size={20} color={colors.mutedForeground} />
+                                <Text className="font-medium">Thành viên hoạt động</Text>
+                            </View>
+                            <View className="flex-row items-center gap-2">
+                                <Text className="font-semibold">{stats.activeMembers}</Text>
+                                <View className="flex-row items-center gap-1">
+                                    <Ionicons name={getChangeIcon(stats.activeMembersChange) as any} size={14} color={stats.activeMembersChange > 0 ? 'green' : stats.activeMembersChange < 0 ? 'red' : 'gray'} />
+                                    <Text className={`text-xs font-medium ${getChangeColor(stats.activeMembersChange)}`}>
+                                        {Math.abs(stats.activeMembersChange)}%
+                                    </Text>
+                                </View>
+                            </View>
+                        </View>
                     </View>
                 </View>
 
+                {/* Biểu đồ hoạt động theo ngày — thay cho recharts trên web bằng cột đơn giản */}
+                {stats.weeklyActivity?.length > 0 && (
+                    <View className="bg-card rounded-xl p-4 shadow-sm border border-border">
+                        <View className="mb-4">
+                            <Text variant="large" className="font-semibold">Hoạt động theo ngày</Text>
+                            <Text variant="small" className="text-muted-foreground mt-1">Số tương tác trong 7 ngày qua</Text>
+                        </View>
+
+                        <View
+                            className="flex-row items-end justify-between gap-2"
+                            style={{ height: CHART_HEIGHT }}
+                            accessible
+                            accessibilityLabel={`Hoạt động 7 ngày qua: ${stats.weeklyActivity
+                                .map((d) => `${d.label} ${d.value}`)
+                                .join(', ')}`}>
+                            {stats.weeklyActivity.map((item) => {
+                                const height = maxActivity > 0
+                                    ? Math.max((item.value / maxActivity) * (CHART_HEIGHT - 24), 2)
+                                    : 2;
+                                return (
+                                    <View key={item.label} className="flex-1 items-center gap-1">
+                                        <Text variant="small" className="text-muted-foreground text-[10px]">
+                                            {item.value}
+                                        </Text>
+                                        <View
+                                            className="w-full rounded-t bg-primary"
+                                            style={{ height }}
+                                        />
+                                        <Text variant="small" className="text-muted-foreground text-[10px]">
+                                            {item.label}
+                                        </Text>
+                                    </View>
+                                );
+                            })}
+                        </View>
+                    </View>
+                )}
+
             </ScrollView>
+
         </SafeAreaView>
     );
 }

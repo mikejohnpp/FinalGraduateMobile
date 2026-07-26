@@ -11,6 +11,8 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
+        // Trượt ngang khi đổi tab, cùng cảm giác với pill trong màn Nhóm.
+        animation: 'shift',
         // Tab đang chọn dùng màu nhấn (xanh) — đồng bộ với web.
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,

@@ -1,16 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Alert } from 'react-native';
 import http from '@/lib/http';
 import { API } from '@/lib/constants';
 import { useAppSelector } from '@/store/hooks';
-import type { 
-    IGroupAdmin, 
-    IGroupStats, 
-    IGroupAdminMember, 
-    IGroupAdminPost, 
-    ApiResultGeneric, 
-    ApiResult, 
-    PageResponse 
+import type {
+    IGroupAdmin,
+    IGroupStats,
+    IGroupAdminMember,
+    IGroupAdminPost,
+    ApiResultGeneric,
+    ApiResult,
+    PageResponse
 } from '@/types';
 
 export function useGroupInfo(groupId: number | string) {
@@ -28,7 +28,7 @@ export function useGroupInfo(groupId: number | string) {
                     `${API.GROUP_ADMIN.INFO}/${groupId}/admin/info`,
                     { userId }
                 );
-                if (isMounted && res?.data) {
+                if (isMounted && res?.success && res.data) {
                     setGroup(res.data);
                 }
             } catch (e: any) {
@@ -49,40 +49,39 @@ export function useGroupStats(groupId: number | string) {
     const [loading, setLoading] = useState(true);
     const userId = useAppSelector((state) => state.user.userId);
 
-    useEffect(() => {
-        let isMounted = true;
-        const fetchStats = async () => {
-            if (!userId || !groupId) return;
-            setLoading(true);
-            try {
-                const res = await http.get<ApiResultGeneric<IGroupStats>>(
-                    `${API.GROUP_ADMIN.STATS}/${groupId}/admin/stats`,
-                    { userId }
-                );
-                if (isMounted && res?.data) {
-                    setStats(res.data);
-                }
-            } catch (e: any) {
-                Alert.alert('Lỗi', 'Không thể tải thống kê');
-            } finally {
-                if (isMounted) setLoading(false);
+    const fetchStats = useCallback(async () => {
+        if (!userId || !groupId) return;
+        setLoading(true);
+        try {
+            const res = await http.get<ApiResultGeneric<IGroupStats>>(
+                `${API.GROUP_ADMIN.STATS}/${groupId}/admin/stats`,
+                { userId }
+            );
+            if (res?.success && res.data) {
+                setStats(res.data);
             }
-        };
-        fetchStats();
-        return () => { isMounted = false; };
+        } catch (e: any) {
+            Alert.alert('Lỗi', 'Không thể tải thống kê');
+        } finally {
+            setLoading(false);
+        }
     }, [groupId, userId]);
 
-    return { stats, loading, refetch: () => setLoading(true) }; // refetch hook
+    useEffect(() => {
+        fetchStats();
+    }, [fetchStats]);
+
+    return { stats, loading, refetch: fetchStats };
 }
 
 export function useGroupMemberRequests(groupId: number | string) {
     const [members, setMembers] = useState<IGroupAdminMember[]>([]);
     const [loading, setLoading] = useState(true);
-    
+
     const [searchQuery, setSearchQuery] = useState('');
     const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
     const [genderFilter, setGenderFilter] = useState<'ALL' | 'MALE' | 'FEMALE' | 'OTHER'>('ALL');
-    
+
     const [page, setPage] = useState(0);
     const [hasNext, setHasNext] = useState(false);
     const userId = useAppSelector((state) => state.user.userId);
@@ -99,9 +98,9 @@ export function useGroupMemberRequests(groupId: number | string) {
                 `${API.GROUP_ADMIN.MEMBER_REQUESTS}/${groupId}/admin/member-requests`,
                 params
             );
-            if (res?.data) {
+            if (res?.success && res.data) {
                 setMembers(prev => reset ? res.data!.data : [...prev, ...res.data!.data]);
-                setHasNext(res.data!.hasNext);
+                setHasNext(res.data.hasNext);
             }
         } catch (e: any) {
             Alert.alert('Lỗi', 'Không thể tải yêu cầu tham gia');
@@ -126,7 +125,7 @@ export function useGroupMemberRequests(groupId: number | string) {
         if (!userId) return;
         const backup = [...members];
         setMembers(prev => prev.filter(m => m.id !== memberId));
-        
+
         try {
             const res = await http.post<ApiResult>(
                 `${API.GROUP_ADMIN.MEMBER_APPROVE}/${groupId}/admin/member-requests/approve?userId=${userId}`,
@@ -147,7 +146,7 @@ export function useGroupMemberRequests(groupId: number | string) {
         if (!userId) return;
         const backup = [...members];
         setMembers(prev => prev.filter(m => m.id !== memberId));
-        
+
         try {
             const res = await http.post<ApiResult>(
                 `${API.GROUP_ADMIN.MEMBER_REJECT}/${groupId}/admin/member-requests/reject?userId=${userId}`,
@@ -177,6 +176,7 @@ export function useGroupMemberRequests(groupId: number | string) {
         setGenderFilter,
         loadMore,
         hasNext,
+        refetch: () => fetchRequests(0, true),
     };
 }
 
@@ -195,9 +195,9 @@ export function useGroupPendingPosts(groupId: number | string) {
                 `${API.GROUP_ADMIN.PENDING_POSTS}/${groupId}/admin/pending-posts`,
                 { userId, page: currentPage, size: 10 }
             );
-            if (res?.data) {
+            if (res?.success && res.data) {
                 setPosts(prev => reset ? res.data!.data : [...prev, ...res.data!.data]);
-                setHasNext(res.data!.hasNext);
+                setHasNext(res.data.hasNext);
             }
         } catch (e: any) {
             Alert.alert('Lỗi', 'Không thể tải bài viết chờ duyệt');
@@ -258,5 +258,13 @@ export function useGroupPendingPosts(groupId: number | string) {
         }
     };
 
-    return { posts, loading, approvePost, rejectPost, loadMore, hasNext };
+    return {
+        posts,
+        loading,
+        approvePost,
+        rejectPost,
+        loadMore,
+        hasNext,
+        refetch: () => fetchPosts(0, true),
+    };
 }
