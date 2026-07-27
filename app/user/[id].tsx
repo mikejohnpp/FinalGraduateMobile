@@ -1,11 +1,16 @@
 // Màn hình hồ sơ người dùng khác — dùng chung hook useProfile (tự tính isOwner).
-import { useCallback } from 'react';
-import { ActivityIndicator, FlatList, View } from 'react-native';
+// Bộ tab đồng bộ với hồ sơ của mình và với web: Bài viết | Giới thiệu | Bạn bè | Reels.
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { PostCard } from '@/components/PostCard';
+import { ProfileAboutCard } from '@/components/profile/ProfileAboutCard';
+import { ProfileFriendsCard } from '@/components/profile/ProfileFriendsCard';
+import { ProfileReels } from '@/components/profile/ProfileReels';
+import { ProfileTabsBar, type ProfileTab } from '@/components/profile/ProfileTabsBar';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { resolveMediaUrl } from '@/lib/media';
@@ -16,9 +21,6 @@ import { useLikePost } from '@/hooks/usePost';
 import chatService from '@/services/chatService';
 import { useAppSelector } from '@/store/hooks';
 import type { FriendStatus, IPost } from '@/types';
-
-
-
 
 export default function UserProfileScreen() {
   const colors = useThemeColors();
@@ -33,6 +35,7 @@ export default function UserProfileScreen() {
   const friendStatus = useProfileFriendStatus(profileUserId);
   const isOwner = currentUserId === profileUserId;
 
+  const [activeTab, setActiveTab] = useState<ProfileTab>('posts');
 
   const handleToggleLike = useCallback(
     (post: IPost) => {
@@ -112,9 +115,16 @@ export default function UserProfileScreen() {
             {profile.bio}
           </Text>
         )}
-        <Text variant="muted" className="mt-1 text-sm">
-          {profile.friendCount} bạn bè
-        </Text>
+        {/* Bấm số bạn bè để sang tab "Bạn bè" — giống web */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Xem danh sách bạn bè"
+          className="mt-1 active:opacity-70"
+          onPress={() => setActiveTab('friends')}>
+          <Text variant="muted" className="text-sm">
+            {profile.friendCount} bạn bè
+          </Text>
+        </Pressable>
 
         {/* Nút hành động kết bạn/nhắn tin — ẩn khi xem hồ sơ của chính mình */}
         {!isOwner && (
@@ -128,22 +138,38 @@ export default function UserProfileScreen() {
             onUnfriend={friendStatus.unfriend}
             onMessage={handleMessage}
           />
-
         )}
       </View>
 
-
-      {/* Info rows */}
-      <View className="mt-4 gap-2 px-4">
-        {!!profile.location && <InfoRow icon="location-outline" text={profile.location} />}
-        {!!profile.workplace && <InfoRow icon="briefcase-outline" text={profile.workplace} />}
-        {!!profile.education && <InfoRow icon="school-outline" text={profile.education} />}
-        {!!profile.hometown && <InfoRow icon="home-outline" text={profile.hometown} />}
+      <View className="mt-4">
+        <ProfileTabsBar activeTab={activeTab} onTabChange={setActiveTab} />
       </View>
 
-      <View className="mt-4 border-t border-border px-4 py-3">
-        <Text variant="large">Bài viết</Text>
-      </View>
+      {/* Tab "Bài viết": kèm khối Giới thiệu + Bạn bè như cột trái của web */}
+      {activeTab === 'posts' && (
+        <>
+          <ProfileAboutCard profile={profile} />
+          <View className="h-2" />
+          <ProfileFriendsCard
+            profileUserId={profile.id}
+            friendCount={profile.friendCount}
+            onViewAll={() => setActiveTab('friends')}
+          />
+          <View className="h-2" />
+        </>
+      )}
+
+      {activeTab === 'about' && <ProfileAboutCard profile={profile} />}
+
+      {activeTab === 'friends' && (
+        <ProfileFriendsCard
+          profileUserId={profile.id}
+          friendCount={profile.friendCount}
+          size={30}
+        />
+      )}
+
+      {activeTab === 'reels' && <ProfileReels userId={profile.id} isOwner={isOwner} />}
     </View>
   );
 
@@ -162,7 +188,7 @@ export default function UserProfileScreen() {
       </View>
 
       <FlatList
-        data={posts}
+        data={activeTab === 'posts' ? posts : []}
         keyExtractor={(item) => String(item.id)}
         ListHeaderComponent={header}
         renderItem={({ item }) => (
@@ -175,23 +201,15 @@ export default function UserProfileScreen() {
         )}
         ItemSeparatorComponent={() => <View className="h-2" />}
         ListEmptyComponent={
-          <View className="items-center bg-card py-8">
-            <Text variant="muted">Chưa có bài viết nào.</Text>
-          </View>
+          activeTab === 'posts' ? (
+            <View className="items-center bg-card py-8">
+              <Text variant="muted">Chưa có bài viết nào.</Text>
+            </View>
+          ) : null
         }
         contentContainerClassName="bg-card pb-4"
       />
     </SafeAreaView>
-  );
-}
-
-function InfoRow({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) {
-  const colors = useThemeColors();
-  return (
-    <View className="flex-row items-center gap-2">
-      <Ionicons name={icon} size={18} color={colors.mutedForeground} />
-      <Text className="text-muted-foreground">{text}</Text>
-    </View>
   );
 }
 
@@ -285,4 +303,3 @@ function FriendActionButtons({
     </View>
   );
 }
-

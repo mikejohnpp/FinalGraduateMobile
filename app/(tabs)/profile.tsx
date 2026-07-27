@@ -1,4 +1,5 @@
 // Màn hình hồ sơ cá nhân — port ý tưởng từ web (Profile + ProfileCover/About + ProfileTabs).
+// Bộ tab đồng bộ với web: Bài viết | Giới thiệu | Bạn bè | Reels.
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,7 +7,10 @@ import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { PostCard } from '@/components/PostCard';
-import { ProfileReels } from '@/components/ProfileReels';
+import { ProfileAboutCard } from '@/components/profile/ProfileAboutCard';
+import { ProfileFriendsCard } from '@/components/profile/ProfileFriendsCard';
+import { ProfileReels } from '@/components/profile/ProfileReels';
+import { ProfileTabsBar, type ProfileTab } from '@/components/profile/ProfileTabsBar';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { pickImageWithMeta } from '@/lib/imagePicker';
@@ -16,8 +20,6 @@ import { useProfile, useUploadAvatar, useUploadCover, useUserPosts } from '@/hoo
 import { useLikePost } from '@/hooks/usePost';
 import { useAppSelector } from '@/store/hooks';
 import type { IPost } from '@/types';
-
-type ProfileTab = 'posts' | 'reels';
 
 export default function ProfileScreen() {
   const colors = useThemeColors();
@@ -131,9 +133,16 @@ export default function ProfileScreen() {
             {profile.bio}
           </Text>
         )}
-        <Text variant="muted" className="mt-1 text-sm">
-          {profile.friendCount} bạn bè
-        </Text>
+        {/* Bấm số bạn bè để sang tab "Bạn bè" — giống web */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Xem danh sách bạn bè"
+          className="mt-1 active:opacity-70"
+          onPress={() => setActiveTab('friends')}>
+          <Text variant="muted" className="text-sm">
+            {profile.friendCount} bạn bè
+          </Text>
+        </Pressable>
 
         {isOwner && (
           <Button
@@ -146,31 +155,36 @@ export default function ProfileScreen() {
         )}
       </View>
 
-      {/* Info rows */}
-      <View className="mt-4 gap-2 px-4">
-        {!!profile.location && <InfoRow icon="location-outline" text={profile.location} />}
-        {!!profile.workplace && <InfoRow icon="briefcase-outline" text={profile.workplace} />}
-        {!!profile.education && <InfoRow icon="school-outline" text={profile.education} />}
-        {!!profile.hometown && <InfoRow icon="home-outline" text={profile.hometown} />}
+      <View className="mt-4">
+        <ProfileTabsBar activeTab={activeTab} onTabChange={setActiveTab} />
       </View>
 
-      {/* Tabs: Bài viết / Reels */}
-      <View className="mt-4 flex-row border-t border-border">
-        <TabButton
-          label="Bài viết"
-          active={activeTab === 'posts'}
-          onPress={() => setActiveTab('posts')}
-        />
-        <TabButton
-          label="Reels"
-          active={activeTab === 'reels'}
-          onPress={() => setActiveTab('reels')}
-        />
-      </View>
-
-      {activeTab === 'reels' && userId != null && (
-        <ProfileReels userId={userId} isOwner={isOwner} />
+      {/* Tab "Bài viết" của web hiển thị kèm khối Giới thiệu + Bạn bè ở cột trái;
+          trên mobile xếp dọc phía trên danh sách bài viết. */}
+      {activeTab === 'posts' && (
+        <>
+          <ProfileAboutCard profile={profile} />
+          <View className="h-2" />
+          <ProfileFriendsCard
+            profileUserId={profile.id}
+            friendCount={profile.friendCount}
+            onViewAll={() => setActiveTab('friends')}
+          />
+          <View className="h-2" />
+        </>
       )}
+
+      {activeTab === 'about' && <ProfileAboutCard profile={profile} />}
+
+      {activeTab === 'friends' && (
+        <ProfileFriendsCard
+          profileUserId={profile.id}
+          friendCount={profile.friendCount}
+          size={30}
+        />
+      )}
+
+      {activeTab === 'reels' && <ProfileReels userId={profile.id} isOwner={isOwner} />}
     </View>
   );
 
@@ -199,37 +213,5 @@ export default function ProfileScreen() {
         contentContainerClassName="bg-card pb-4"
       />
     </SafeAreaView>
-  );
-}
-
-function TabButton({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  const colors = useThemeColors();
-  return (
-    <Pressable
-      onPress={onPress}
-      className="flex-1 items-center border-b-2 py-3 active:opacity-70"
-      style={{ borderBottomColor: active ? colors.primary : 'transparent' }}>
-      <Text className={active ? 'font-semibold text-primary' : 'font-semibold text-muted-foreground'}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
-function InfoRow({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) {
-  const colors = useThemeColors();
-  return (
-    <View className="flex-row items-center gap-2">
-      <Ionicons name={icon} size={18} color={colors.mutedForeground} />
-      <Text className="text-muted-foreground">{text}</Text>
-    </View>
   );
 }

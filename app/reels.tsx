@@ -18,13 +18,26 @@ const { height: SCREEN_H } = Dimensions.get('window');
 
 export default function ReelsScreen() {
   const router = useRouter();
-  const { userId } = useLocalSearchParams<{ userId?: string }>();
+  // start — chỉ số reel muốn mở sẵn (khi vào từ lưới Reels trong hồ sơ).
+  const { userId, start } = useLocalSearchParams<{ userId?: string; start?: string }>();
   const uid = userId ? Number(userId) : undefined;
+  const startIndex = Number(start);
+  const initialIndex = Number.isFinite(startIndex) && startIndex > 0 ? startIndex : 0;
   const { reels, hasMore, loadMore, loading } = useReels(uid);
 
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(initialIndex);
   const [muted, setMuted] = useState(false);
   const [itemHeight, setItemHeight] = useState(SCREEN_H);
+
+  // Nhảy tới reel được chọn sau khi trang đầu đã về. Chỉ làm một lần: những lần
+  // scroll sau là do người dùng vuốt.
+  const listRef = useRef<FlatList<IStoryDTO>>(null);
+  const jumpedRef = useRef(initialIndex === 0);
+  useEffect(() => {
+    if (jumpedRef.current || reels.length <= initialIndex) return;
+    jumpedRef.current = true;
+    listRef.current?.scrollToOffset({ offset: itemHeight * initialIndex, animated: false });
+  }, [reels.length, initialIndex, itemHeight]);
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -65,6 +78,7 @@ export default function ReelsScreen() {
       className="flex-1 bg-black"
       onLayout={(e) => setItemHeight(e.nativeEvent.layout.height)}>
       <FlatList
+        ref={listRef}
         data={reels}
         keyExtractor={(item) => String(item.id)}
         renderItem={renderItem}
