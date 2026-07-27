@@ -181,9 +181,9 @@ function PostCardBase({
       {/* Content */}
       {!!post.content && <Text className="mb-3 leading-6">{post.content}</Text>}
 
-      {/* Media (ảnh/video/file) */}
+      {/* Media (ảnh/video/file) — full-bleed: bù lại px-4 của card để ảnh tràn hết chiều rộng */}
       {post.media?.length > 0 && (
-        <View className="mb-3">
+        <View className="-mx-4 mb-3">
           <MediaGallery media={post.media} size="post" />
         </View>
       )}

@@ -31,12 +31,14 @@ function ImageTile({
     item,
     width,
     height,
+    radius = 0,
     overlayCount,
     onPress,
 }: {
     item: MediaItem;
     width: number;
     height: number;
+    radius?: number;
     overlayCount?: number;
     onPress?: () => void;
 }) {
@@ -45,18 +47,19 @@ function ImageTile({
         <Pressable onPress={onPress} style={{ width, height }}>
             <Image
                 source={{ uri: item.url }}
-                style={{ width, height, borderRadius: 8, backgroundColor: colors.muted }}
+                style={{ width, height, borderRadius: radius, backgroundColor: colors.muted }}
                 contentFit="cover"
             />
             {overlayCount && overlayCount > 0 ? (
                 <View
-                    className="items-center justify-center rounded-lg"
+                    className="items-center justify-center"
                     style={{
                         position: 'absolute',
                         top: 0,
                         left: 0,
                         width,
                         height,
+                        borderRadius: radius,
                         backgroundColor: 'rgba(0,0,0,0.45)',
                     }}>
                     <Text className="text-2xl font-semibold text-white">+{overlayCount}</Text>
@@ -66,38 +69,69 @@ function ImageTile({
     );
 }
 
-// Khung hiển thị 1 ảnh kiểu letterbox (giống web): nền ảnh phóng to + làm mờ để lấp
-// hai bên viền, ảnh chính hiển thị TOÀN BỘ (contain) không bị cắt.
+// Khung hiển thị 1 ảnh: chiều cao khung co theo tỉ lệ thật của ảnh, `maxHeight` chỉ là
+// giới hạn trên. Ảnh ngang/vuông fill trọn khung (cover) nên không có dải mờ nào; chỉ khi
+// ảnh quá cao và bị cắt trần mới dùng nền blur kiểu letterbox như web.
 function SingleImageFrame({
     item,
     width,
-    height,
+    maxHeight,
+    radius = 0,
     onPress,
 }: {
     item: MediaItem;
     width: number;
-    height: number;
+    maxHeight: number;
+    radius?: number;
     onPress?: () => void;
 }) {
+    const colors = useThemeColors();
+    // ratio = width / height của ảnh gốc; null khi chưa load xong.
+    const [ratio, setRatio] = useState<number | null>(null);
+
+    // Trước khi biết tỉ lệ, dùng 4:3 làm placeholder để tránh nhảy layout quá mạnh.
+    const naturalHeight = ratio ? width / ratio : width * 0.75;
+    const height = Math.min(naturalHeight, maxHeight);
+    // Ảnh cao hơn trần -> phải contain + nền mờ, nếu không sẽ bị crop.
+    const clipped = naturalHeight > maxHeight + 1;
+
     return (
         <Pressable
             onPress={onPress}
-            style={{ width, height, borderRadius: 8, overflow: 'hidden', backgroundColor: '#000' }}>
-            {/* Nền mờ lấp viền */}
-            <Image
-                source={{ uri: item.url }}
-                style={{ position: 'absolute', width, height, transform: [{ scale: 1.1 }] }}
-                contentFit="cover"
-                blurRadius={20}
-            />
-            <View
-                style={{ position: 'absolute', width, height, backgroundColor: 'rgba(0,0,0,0.2)' }}
-            />
-            {/* Ảnh chính hiển thị toàn bộ */}
+            style={{
+                width,
+                height,
+                borderRadius: radius,
+                overflow: 'hidden',
+                backgroundColor: clipped ? '#000' : colors.muted,
+            }}>
+            {clipped ? (
+                <>
+                    {/* Nền mờ lấp hai bên viền khi ảnh bị giới hạn chiều cao */}
+                    <Image
+                        source={{ uri: item.url }}
+                        style={{ position: 'absolute', width, height, transform: [{ scale: 1.1 }] }}
+                        contentFit="cover"
+                        blurRadius={20}
+                    />
+                    <View
+                        style={{
+                            position: 'absolute',
+                            width,
+                            height,
+                            backgroundColor: 'rgba(0,0,0,0.2)',
+                        }}
+                    />
+                </>
+            ) : null}
             <Image
                 source={{ uri: item.url }}
                 style={{ width, height }}
-                contentFit="contain"
+                contentFit={clipped ? 'contain' : 'cover'}
+                onLoad={(e) => {
+                    const { width: w, height: h } = e.source;
+                    if (w > 0 && h > 0) setRatio(w / h);
+                }}
             />
         </Pressable>
     );
@@ -119,25 +153,35 @@ function ImageMosaic({
     const count = images.length;
     const w = containerWidth;
     const heightCap = isComment ? 220 : 400;
+    // Ảnh trong post tràn hết chiều rộng nên bỏ bo góc; comment vẫn bo 8.
+    const radius = isComment ? 8 : 0;
 
     if (count === 1) {
         return (
             <SingleImageFrame
                 item={images[0]}
                 width={w}
-                height={heightCap}
+                maxHeight={heightCap}
+                radius={radius}
                 onPress={() => onOpen(0)}
             />
         );
     }
 
-
+    // 2 và 3 ảnh: dán liền nhau, không khe.
     if (count === 2) {
-        const size = (w - GAP) / 2;
+        const size = w / 2;
         return (
-            <View style={{ flexDirection: 'row', gap: GAP }}>
+            <View style={{ flexDirection: 'row' }}>
                 {images.map((item, i) => (
-                    <ImageTile key={item.id} item={item} width={size} height={size} onPress={() => onOpen(i)} />
+                    <ImageTile
+                        key={item.id}
+                        item={item}
+                        width={size}
+                        height={size}
+                        radius={radius}
+                        onPress={() => onOpen(i)}
+                    />
                 ))}
             </View>
         );
@@ -145,14 +189,32 @@ function ImageMosaic({
 
     if (count === 3) {
         const h = isComment ? 220 : 300;
-        const leftW = (w - GAP) / 2;
-        const rightH = (h - GAP) / 2;
+        const colW = w / 2;
+        const rightH = h / 2;
         return (
-            <View style={{ flexDirection: 'row', gap: GAP, height: h }}>
-                <ImageTile item={images[0]} width={leftW} height={h} onPress={() => onOpen(0)} />
-                <View style={{ gap: GAP }}>
-                    <ImageTile item={images[1]} width={leftW} height={rightH} onPress={() => onOpen(1)} />
-                    <ImageTile item={images[2]} width={leftW} height={rightH} onPress={() => onOpen(2)} />
+            <View style={{ flexDirection: 'row', height: h }}>
+                <ImageTile
+                    item={images[0]}
+                    width={colW}
+                    height={h}
+                    radius={radius}
+                    onPress={() => onOpen(0)}
+                />
+                <View>
+                    <ImageTile
+                        item={images[1]}
+                        width={colW}
+                        height={rightH}
+                        radius={radius}
+                        onPress={() => onOpen(1)}
+                    />
+                    <ImageTile
+                        item={images[2]}
+                        width={colW}
+                        height={rightH}
+                        radius={radius}
+                        onPress={() => onOpen(2)}
+                    />
                 </View>
             </View>
         );
@@ -163,7 +225,14 @@ function ImageMosaic({
         return (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP }}>
                 {images.map((item, i) => (
-                    <ImageTile key={item.id} item={item} width={size} height={size} onPress={() => onOpen(i)} />
+                    <ImageTile
+                        key={item.id}
+                        item={item}
+                        width={size}
+                        height={size}
+                        radius={radius}
+                        onPress={() => onOpen(i)}
+                    />
                 ))}
             </View>
         );
@@ -181,7 +250,14 @@ function ImageMosaic({
         <View style={{ gap: GAP }}>
             <View style={{ flexDirection: 'row', gap: GAP }}>
                 {top.map((item, i) => (
-                    <ImageTile key={item.id} item={item} width={topW} height={topH} onPress={() => onOpen(i)} />
+                    <ImageTile
+                        key={item.id}
+                        item={item}
+                        width={topW}
+                        height={topH}
+                        radius={radius}
+                        onPress={() => onOpen(i)}
+                    />
                 ))}
             </View>
             <View style={{ flexDirection: 'row', gap: GAP }}>
@@ -193,6 +269,7 @@ function ImageMosaic({
                             item={item}
                             width={botSize}
                             height={botSize}
+                            radius={radius}
                             overlayCount={isLast && remaining > 0 ? remaining : undefined}
                             onPress={() => onOpen(idx + 2)}
                         />
@@ -216,8 +293,9 @@ export default function MediaGallery({ media, size = 'post' }: MediaGalleryProps
     const files = media.filter((m) => m.mediaType === 'FILE');
 
     const isComment = size === 'comment';
-    // Trừ padding ngang của card (~32) + lề khi là comment.
-    const containerWidth = screenWidth - (isComment ? 96 : 32);
+    // Post: ảnh full-bleed nên dùng đúng chiều rộng màn hình (PostCard đã bù -mx-4).
+    // Comment: trừ lề thụt vào của comment.
+    const containerWidth = isComment ? screenWidth - 96 : screenWidth;
 
     return (
         <View style={{ gap: 8 }}>
