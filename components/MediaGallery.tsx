@@ -1,12 +1,26 @@
 // MediaGallery — render danh sách media của post/comment. Port ý tưởng từ web (MediaGallery.tsx).
-// Bố cục ảnh kiểu Facebook (mosaic) tuỳ số lượng; video/audio/file render đơn giản.
-import { useState } from 'react';
-import { Linking, Modal, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+// Bố cục ảnh kiểu Facebook (mosaic) tuỳ số lượng; video phát tại chỗ (tap-to-play) bằng
+// expo-video, audio phát tại chỗ bằng expo-audio; chỉ FILE mới mở ra ngoài để tải về.
+import { useCallback, useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    Linking,
+    Modal,
+    Pressable,
+    ScrollView,
+    View,
+    useWindowDimensions,
+    type GestureResponderEvent,
+} from 'react-native';
 import { Image } from 'expo-image';
+import { useVideoPlayer, VideoView } from 'expo-video';
+import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '@/components/ui/text';
 import { useThemeColors } from '@/hooks/useTheme';
+import { resolveMediaUrl } from '@/lib/media';
 import type { MediaItem } from '@/types';
+
 
 interface MediaGalleryProps {
     media: MediaItem[] | undefined | null;
@@ -280,6 +294,184 @@ function ImageMosaic({
     );
 }
 
+// Giây -> "m:ss" để hiển thị tiến trình audio.
+function formatTime(seconds: number): string {
+    const total = Number.isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : 0;
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
+// Bề mặt phát video thật. Tách riêng để `useVideoPlayer` chỉ chạy sau khi người dùng bấm play,
+// nhờ vậy feed nhiều video không cùng lúc tải/buffer.
+function VideoSurface({
+    uri,
+    width,
+    height,
+    radius,
+}: {
+    uri: string;
+    width: number;
+    height: number;
+    radius: number;
+}) {
+    const player = useVideoPlayer(uri, (p) => {
+        p.loop = false;
+        p.play();
+    });
+
+    return (
+        <VideoView
+            player={player}
+            style={{ width, height, borderRadius: radius, backgroundColor: '#000' }}
+            contentFit="contain"
+            nativeControls
+        />
+    );
+}
+
+// Ô video trong bài viết: mặc định là ảnh nền đen + nút play; bấm mới mount trình phát.
+function VideoTile({
+    width,
+    height,
+    radius,
+    uri,
+}: {
+    width: number;
+    height: number;
+    radius: number;
+    uri: string;
+}) {
+    const [playing, setPlaying] = useState(false);
+
+    if (playing) {
+        return <VideoSurface uri={uri} width={width} height={height} radius={radius} />;
+    }
+
+    return (
+        <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Phát video"
+            onPress={() => setPlaying(true)}
+            className="items-center justify-center"
+            style={{ width, height, borderRadius: radius, backgroundColor: '#000' }}>
+            <Ionicons name="play-circle" size={56} color="#ffffff" />
+            <Text className="mt-1 text-xs text-white">Nhấn để phát video</Text>
+        </Pressable>
+    );
+}
+
+// Thanh phát audio: play/pause, thời lượng và thanh tiến trình bấm để tua.
+function AudioPlayerBar({ uri, name }: { uri: string; name: string }) {
+    const colors = useThemeColors();
+    const player = useAudioPlayer({ uri });
+    const status = useAudioPlayerStatus(player);
+    const [barWidth, setBarWidth] = useState(0);
+
+    // iOS: cho phép phát khi máy đang ở chế độ im lặng.
+    useEffect(() => {
+        setAudioModeAsync({ playsInSilentMode: true }).catch(() => { });
+    }, []);
+
+    // Tự phát ngay khi thanh được mount (người dùng vừa bấm play ở ô placeholder).
+    useEffect(() => {
+        player.play();
+    }, [player]);
+
+    // Phát hết thì tua về đầu để bấm play lại được ngay.
+    useEffect(() => {
+        if (status.didJustFinish) {
+            player.pause();
+            player.seekTo(0).catch(() => { });
+        }
+    }, [status.didJustFinish, player]);
+
+    const duration = status.duration || 0;
+    const current = Math.min(status.currentTime || 0, duration || Number.MAX_SAFE_INTEGER);
+    const progress = duration > 0 ? Math.min(current / duration, 1) : 0;
+
+    const handleSeek = useCallback(
+        (e: GestureResponderEvent) => {
+            if (!duration || barWidth <= 0) return;
+            const ratio = Math.max(0, Math.min(e.nativeEvent.locationX / barWidth, 1));
+            player.seekTo(ratio * duration).catch(() => { });
+        },
+        [barWidth, duration, player],
+    );
+
+    return (
+        <View className="flex-row items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2">
+            <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={status.playing ? 'Tạm dừng' : 'Phát'}
+                onPress={() => (status.playing ? player.pause() : player.play())}
+                className="size-9 items-center justify-center rounded-full bg-primary/10 active:opacity-70">
+                {!status.isLoaded || status.isBuffering ? (
+                    <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                    <Ionicons
+                        name={status.playing ? 'pause' : 'play'}
+                        size={18}
+                        color={colors.primary}
+                    />
+                )}
+            </Pressable>
+
+            <View className="min-w-0 flex-1">
+                <Text className="text-sm" numberOfLines={1}>
+                    {name}
+                </Text>
+                <Pressable
+                    accessibilityRole="adjustable"
+                    accessibilityLabel="Tua audio"
+                    onPress={handleSeek}
+                    onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
+                    className="mt-1 py-1.5">
+                    <View
+                        className="h-1 overflow-hidden rounded-full"
+                        style={{ backgroundColor: colors.border }}>
+                        <View
+                            style={{
+                                width: `${progress * 100}%`,
+                                height: '100%',
+                                backgroundColor: colors.primary,
+                            }}
+                        />
+                    </View>
+                </Pressable>
+            </View>
+
+            <Text variant="muted" className="text-xs tabular-nums">
+                {formatTime(current)} / {formatTime(duration)}
+            </Text>
+        </View>
+    );
+}
+
+// Ô audio: chỉ khởi tạo player khi người dùng bấm play (tránh N player nằm chờ trong feed).
+function AudioTile({ uri, name }: { uri: string; name: string }) {
+    const colors = useThemeColors();
+    const [started, setStarted] = useState(false);
+
+    if (started) return <AudioPlayerBar uri={uri} name={name} />;
+
+    return (
+        <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Phát ${name}`}
+            onPress={() => setStarted(true)}
+            className="flex-row items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2 active:opacity-70">
+            <View className="size-9 items-center justify-center rounded-full bg-primary/10">
+                <Ionicons name="play" size={18} color={colors.primary} />
+            </View>
+            <Text className="min-w-0 flex-1 text-sm" numberOfLines={1}>
+                {name}
+            </Text>
+            <Ionicons name="musical-notes-outline" size={18} color={colors.mutedForeground} />
+        </Pressable>
+    );
+}
+
 export default function MediaGallery({ media, size = 'post' }: MediaGalleryProps) {
     const colors = useThemeColors();
     const { width: screenWidth } = useWindowDimensions();
@@ -287,10 +479,14 @@ export default function MediaGallery({ media, size = 'post' }: MediaGalleryProps
 
     if (!media || media.length === 0) return null;
 
-    const images = media.filter((m) => m.mediaType === 'IMAGE');
-    const videos = media.filter((m) => m.mediaType === 'VIDEO');
-    const audios = media.filter((m) => m.mediaType === 'AUDIO');
-    const files = media.filter((m) => m.mediaType === 'FILE');
+    // Backend có thể trả đường dẫn tương đối (/uploads/...) — chuẩn hoá về URL tuyệt đối.
+    const items = media.map((m) => ({ ...m, url: resolveMediaUrl(m.url) ?? m.url }));
+
+    const images = items.filter((m) => m.mediaType === 'IMAGE');
+    const videos = items.filter((m) => m.mediaType === 'VIDEO');
+    const audios = items.filter((m) => m.mediaType === 'AUDIO');
+    const files = items.filter((m) => m.mediaType === 'FILE');
+
 
     const isComment = size === 'comment';
     // Post: ảnh full-bleed nên dùng đúng chiều rộng màn hình (PostCard đã bù -mx-4).
@@ -308,29 +504,20 @@ export default function MediaGallery({ media, size = 'post' }: MediaGalleryProps
                 />
             )}
 
-            {/* Video — hiển thị ô bấm mở bằng trình xem ngoài (RN không có <video> mặc định) */}
+            {/* Video — phát tại chỗ bằng expo-video, chỉ nạp khi người dùng bấm play */}
             {videos.map((item) => (
-                <Pressable
+                <VideoTile
                     key={item.id}
-                    onPress={() => Linking.openURL(item.url)}
-                    className="items-center justify-center rounded-lg bg-black"
-                    style={{ width: containerWidth, height: isComment ? 200 : 240 }}>
-                    <Ionicons name="play-circle" size={56} color="#ffffff" />
-                    <Text className="mt-1 text-xs text-white">Nhấn để phát video</Text>
-                </Pressable>
+                    uri={item.url}
+                    width={containerWidth}
+                    height={isComment ? 200 : Math.min(Math.round((containerWidth * 9) / 16), 400)}
+                    radius={isComment ? 8 : 0}
+                />
             ))}
 
-            {/* Audio */}
+            {/* Audio — phát tại chỗ bằng expo-audio */}
             {audios.map((item) => (
-                <Pressable
-                    key={item.id}
-                    onPress={() => Linking.openURL(item.url)}
-                    className="flex-row items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2">
-                    <Ionicons name="musical-notes-outline" size={20} color={colors.mutedForeground} />
-                    <Text className="flex-1 text-sm" numberOfLines={1}>
-                        {fileNameFromUrl(item.url)}
-                    </Text>
-                </Pressable>
+                <AudioTile key={item.id} uri={item.url} name={fileNameFromUrl(item.url)} />
             ))}
 
             {/* File đính kèm */}
