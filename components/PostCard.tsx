@@ -14,7 +14,6 @@ import { resolveMediaUrl } from '@/lib/media';
 import { timeAgo } from '@/lib/time';
 import type { IPost } from '@/types';
 
-
 interface PostCardProps {
   post: IPost;
   onToggleLike?: (post: IPost) => Promise<boolean | void> | void;
@@ -31,7 +30,6 @@ function PostCardBase({
   onPressGroup,
   likeDisabled,
 }: PostCardProps) {
-
   const colors = useThemeColors();
   const openProfile = useOpenProfile();
   const [liked, setLiked] = useState(post.hasLiked ?? false);
@@ -46,14 +44,14 @@ function PostCardBase({
     if (likeDisabled) return;
     const wasLiked = liked;
     setLiked(!wasLiked);
-    setLikesCount(prev => prev + (wasLiked ? -1 : 1));
+    setLikesCount((prev) => prev + (wasLiked ? -1 : 1));
 
     if (onToggleLike) {
       const success = await onToggleLike(post);
       if (success === false) {
         // Revert on failure
         setLiked(wasLiked);
-        setLikesCount(prev => prev + (wasLiked ? 1 : -1));
+        setLikesCount((prev) => prev + (wasLiked ? 1 : -1));
       }
     }
   };
@@ -100,7 +98,11 @@ function PostCardBase({
               onPress={() => openProfile(post.author.id)}>
               <View className="size-5 overflow-hidden rounded-full border-2 border-card bg-muted">
                 {avatarUri ? (
-                  <Image source={{ uri: avatarUri }} style={{ width: 20, height: 20 }} contentFit="cover" />
+                  <Image
+                    source={{ uri: avatarUri }}
+                    style={{ width: 20, height: 20 }}
+                    contentFit="cover"
+                  />
                 ) : (
                   <View className="flex-1 items-center justify-center">
                     <Text className="text-[8px] font-semibold text-muted-foreground">
@@ -135,9 +137,7 @@ function PostCardBase({
         <View className="flex-1">
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={
-              group ? `Xem nhóm ${group.name}` : `Xem hồ sơ của ${displayName}`
-            }
+            accessibilityLabel={group ? `Xem nhóm ${group.name}` : `Xem hồ sơ của ${displayName}`}
             className="self-start active:opacity-70"
             onPress={group ? handlePressGroup : () => openProfile(post.author.id)}>
             <Text className="font-semibold" numberOfLines={1}>
@@ -177,7 +177,6 @@ function PostCardBase({
         </View>
       </View>
 
-
       {/* Content */}
       {!!post.content && <Text className="mb-3 leading-6">{post.content}</Text>}
 
@@ -207,13 +206,11 @@ function PostCardBase({
           disabled={likeDisabled}
           onPress={handleToggleLikeLocal}>
           <Ionicons
-            name={liked ? 'heart' : 'heart-outline'}
+            name={liked ? 'thumbs-up' : 'thumbs-up-outline'}
             size={20}
-            color={liked ? colors.destructive : colors.mutedForeground}
+            color={liked ? colors.primary : colors.mutedForeground}
           />
-          <Text className={liked ? 'text-destructive' : 'text-muted-foreground'}>
-            Thích
-          </Text>
+          <Text className={liked ? 'text-primary' : 'text-muted-foreground'}>Thích</Text>
         </Button>
         <Button variant="ghost" className="flex-1" onPress={() => onComment?.(post)}>
           <Ionicons name="chatbubble-outline" size={20} color={colors.mutedForeground} />
