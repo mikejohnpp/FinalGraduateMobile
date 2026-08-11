@@ -11,6 +11,10 @@ import { store } from '@/store/store';
 import { useSession } from '@/hooks/useSession';
 import { ThemeProvider } from '@/hooks/useTheme';
 
+import { CallProvider } from '@/hooks/useWebRTC';
+import CallModal from '@/components/messenger/CallModal';
+import { MessageNotificationProvider } from '@/hooks/useMessageNotification';
+import MessageNotificationBanner from '@/components/messenger/MessageNotificationBanner';
 
 function RootNavigator() {
   const { hydrated, isLoggedIn } = useSession();
@@ -51,20 +55,22 @@ function RootNavigator() {
   );
 }
 
-import { CallProvider } from '@/hooks/useWebRTC';
-import CallModal from '@/components/messenger/CallModal';
 
 export default function RootLayout() {
   return (
     <Provider store={store}>
       <ThemeProvider>
         <CallProvider>
-          <SafeAreaProvider>
-            <RootNavigator />
-            <StatusBar style="auto" />
-            <PortalHost />
-            <CallModal />
-          </SafeAreaProvider>
+          <MessageNotificationProvider>
+            <SafeAreaProvider>
+              <RootNavigator />
+              <StatusBar style="auto" />
+              <PortalHost />
+              <CallModal />
+              {/* Banner tin nhắn mới — đặt cuối để nổi trên mọi màn hình. */}
+              <MessageNotificationBanner />
+            </SafeAreaProvider>
+          </MessageNotificationProvider>
         </CallProvider>
       </ThemeProvider>
     </Provider>

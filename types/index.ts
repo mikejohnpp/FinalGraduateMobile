@@ -113,7 +113,6 @@ export interface IProfileUpdate {
     language?: string;
     dateOfBirth?: string;
     phoneNumber?: number;
-    // Link ảnh đại diện / ảnh bìa sau khi đã upload lên storage.
     avatar?: string;
     coverPhoto?: string;
 }
@@ -337,7 +336,21 @@ export interface ChatMessage {
 }
 
 
+// Thông báo tin nhắn mới nhận qua /user/queue/messages (chat-service fanout).
+export interface MessageNotification {
+    conversationId: number;
+    conversationName: string | null;
+    isGroup: boolean;
+    messageId: number;
+    content: string;
+    messageType?: MessageType;
+    createdAt: string;
+    sender: ChatUserResponse;
+}
+
+
 export interface MessageChat {
+
     conversationId: number;
     conversationName: string;
     group: boolean;
@@ -401,7 +414,6 @@ export interface IGroupAdminPost {
 }
 
 // ---- Notification ----
-// Port từ web (src/types/interfaces/notification/INotification.ts).
 export type NotificationType =
     | 'COMMENT'
     | 'REPLY'

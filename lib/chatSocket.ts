@@ -208,3 +208,28 @@ export function unsubscribeCallSignals(): void {
         liveSubs.delete(key);
     }
 }
+
+// Thông báo tin nhắn mới cho user hiện tại, gửi từ chat-service tới
+// /user/queue/messages (không phụ thuộc hội thoại nào đang mở).
+export function subscribeMessageNotifications(
+    callback: (notification: any) => void,
+): StompSubscription | null {
+    const destination = '/user/queue/messages';
+    const key = destination;
+    desiredTopics.set(key, { destination, callback });
+    log('queue subscribe', destination, '(connected=', client?.connected ?? false, ')');
+    ensureActive();
+    applySubscriptions();
+    return liveSubs.get(key) ?? null;
+}
+
+export function unsubscribeMessageNotifications(): void {
+    const key = '/user/queue/messages';
+    desiredTopics.delete(key);
+    const sub = liveSubs.get(key);
+    if (sub) {
+        sub.unsubscribe();
+        liveSubs.delete(key);
+    }
+}
+
