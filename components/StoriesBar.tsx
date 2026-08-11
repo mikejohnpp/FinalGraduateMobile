@@ -9,6 +9,9 @@ import { resolveMediaUrl } from '@/lib/media';
 import { useThemeColors } from '@/hooks/useTheme';
 import { useFriendsStories } from '@/hooks/useStory';
 import type { IGroupedStory } from '@/types';
+import { useSelector } from 'react-redux';
+import type { RootState } from '@/store/store';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export function StoriesBar() {
   const router = useRouter();
@@ -32,16 +35,31 @@ export function StoriesBar() {
 }
 
 function CreateStoryTile({ onPress }: { onPress: () => void }) {
+  const userAvatar = useSelector((s: RootState) => s.user.profile?.avatar);
+  const avatarUri = resolveMediaUrl(userAvatar);
   const colors = useThemeColors();
   return (
     <Pressable onPress={onPress} className="active:opacity-80">
-      <View className="h-40 w-24 overflow-hidden rounded-xl border border-border bg-muted">
-        <View className="flex-1 items-center justify-center">
-          <View className="size-10 items-center justify-center rounded-full bg-primary">
-            <Ionicons name="add" size={22} color={colors.primaryForeground} />
-          </View>
+      <View className="h-40 w-24 overflow-hidden rounded-xl border border-border bg-card">
+        {/* Ảnh avatar user chiếm 3/4 thẻ */}
+        <View className="h-3/4 w-full bg-muted">
+          {avatarUri ? (
+            <Image source={{ uri: avatarUri }} style={{ flex: 1 }} contentFit="cover" />
+          ) : (
+            <View className="flex-1 items-center justify-center">
+              <Ionicons name="person" size={32} color={colors.mutedForeground} />
+            </View>
+          )}
         </View>
-        <Text className="pb-2 text-center text-xs font-semibold">Tạo tin</Text>
+        {/* Thanh dưới 1/4: icon + và chữ */}
+        <View className="relative h-1/4 items-center justify-end bg-card pb-1.5">
+          <View
+            className="absolute -top-4 size-8 items-center justify-center rounded-full bg-primary"
+            style={{ borderWidth: 3, borderColor: colors.card }}>
+            <Ionicons name="add" size={18} color={colors.primaryForeground} />
+          </View>
+          <Text className="text-center text-xs font-semibold">Tạo tin</Text>
+        </View>
       </View>
     </Pressable>
   );
@@ -51,6 +69,7 @@ function StoryTile({ group, onPress }: { group: IGroupedStory; onPress: () => vo
   const colors = useThemeColors();
   const latest = group.stories[0];
   const bgImage = resolveMediaUrl(latest.urlImage);
+  const bgVideo = resolveMediaUrl(latest.urlVideo);
   const avatar = resolveMediaUrl(group.user.avatarUrl);
 
   return (
@@ -58,12 +77,34 @@ function StoryTile({ group, onPress }: { group: IGroupedStory; onPress: () => vo
       <View className="h-40 w-24 overflow-hidden rounded-xl border border-border">
         {bgImage ? (
           <Image source={{ uri: bgImage }} style={{ flex: 1 }} contentFit="cover" />
+        ) : bgVideo && !latest.content ? (
+          <View className="flex-1 items-center justify-center bg-black">
+            <Ionicons name="play-circle" size={32} color="white" />
+          </View>
         ) : (
           <View
-            className="flex-1"
-            style={{ backgroundColor: latest.color ?? colors.primary }}
-          />
+            className="flex-1 items-center justify-center px-2"
+            style={{ backgroundColor: processcolorbe(latest.color) }}>
+            {latest.content ? (
+              <Text numberOfLines={3} className="text-center text-xs font-bold text-white">
+                {latest.content}
+              </Text>
+            ) : null}
+          </View>
         )}
+
+        {/* Gradient overlay */}
+        <View
+          className="absolute inset-0"
+          style={{
+            backgroundColor: 'transparent',
+          }}>
+          <LinearGradient
+            colors={['rgba(0,0,0,0.2)', 'transparent', 'rgba(0,0,0,0.6)']}
+            locations={[0, 0.4, 1]}
+            style={{ flex: 1 }}
+          />
+        </View>
 
         {/* Avatar tròn ở góc trên */}
         <View className="absolute left-2 top-2 size-9 items-center justify-center rounded-full border-2 border-primary bg-muted">
@@ -75,7 +116,7 @@ function StoryTile({ group, onPress }: { group: IGroupedStory; onPress: () => vo
         </View>
 
         {/* Tên người dùng ở đáy */}
-        <View className="absolute inset-x-0 bottom-0 bg-black/30 px-1.5 py-1">
+        <View className="absolute inset-x-0 bottom-0 px-1.5 py-1">
           <Text numberOfLines={1} className="text-xs font-semibold text-white">
             {group.user.username}
           </Text>
@@ -83,4 +124,12 @@ function StoryTile({ group, onPress }: { group: IGroupedStory; onPress: () => vo
       </View>
     </Pressable>
   );
+}
+
+function processcolorbe(text: string | null): string {
+  if (text && text.startsWith('l')) {
+    return text.split(',')[1] || text;
+  }
+
+  return text ? text : '#1877F2';
 }

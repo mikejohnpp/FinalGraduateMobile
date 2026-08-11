@@ -1,6 +1,7 @@
 // friendService — port từ web (src/services/friendService.ts).
 import BaseService from '@/services/BaseService';
 import http from '@/lib/http';
+import { API } from '@/lib/constants';
 import type { ApiResult, ApiResultGeneric, IFriendStatusResponse } from '@/types';
 
 export class FriendService extends BaseService {
@@ -26,6 +27,14 @@ export class FriendService extends BaseService {
     async unfriend(friendUserId: number, userId: number): Promise<boolean> {
         const res = await http.delete<ApiResult>(
             `users/friends/${friendUserId}?userId=${userId}`,
+        );
+        return res.success ?? res.code === 200;
+    }
+
+    /** DELETE /users/friends/suggestions/{targetUserId}?userId={userId} */
+    async dismissSuggestion(targetUserId: number, userId: number): Promise<boolean> {
+        const res = await http.delete<ApiResult>(
+            `${API.FRIEND.SUGGESTIONS}/${targetUserId}?userId=${userId}`,
         );
         return res.success ?? res.code === 200;
     }

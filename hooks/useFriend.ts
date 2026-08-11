@@ -337,6 +337,57 @@ export function useUnfriend() {
     return { unfriend, loadingId };
 }
 
+// useDismissSuggestion — gỡ gợi ý bạn bè (optimistic + rollback)
+export function useDismissSuggestion() {
+    const dispatch = useAppDispatch();
+    const userId = useAppSelector((s) => s.user.userId);
+    const suggestions = useAppSelector((s) => s.friend.suggestions);
+    const [loadingId, setLoadingId] = useState<number | null>(null);
+
+    const dismiss = useCallback(
+        async (targetUserId: number) => {
+            if (!userId) return;
+
+            const snapshot = suggestions.items.find((s) => s.user.id === targetUserId);
+
+            // Optimistic: ẩn ngay khỏi danh sách
+            dispatch(friendActions.removeSuggestion(targetUserId));
+            setLoadingId(targetUserId);
+
+            const rollback = () => {
+                if (snapshot) {
+                    dispatch(
+                        friendActions.setSuggestions({
+                            data: [
+                                snapshot,
+                                ...suggestions.items.filter((s) => s.user.id !== targetUserId),
+                            ],
+                            nextCursor: suggestions.nextCursor,
+                            hasMore: suggestions.hasMore,
+                        }),
+                    );
+                }
+            };
+
+            try {
+                const success = await friendService.dismissSuggestion(targetUserId, userId);
+                if (!success) {
+                    rollback();
+                    Alert.alert('Lỗi', 'Có lỗi xảy ra, vui lòng thử lại');
+                }
+            } catch {
+                rollback();
+                Alert.alert('Lỗi', 'Có lỗi xảy ra, vui lòng thử lại');
+            } finally {
+                setLoadingId(null);
+            }
+        },
+        [dispatch, userId, suggestions],
+    );
+
+    return { dismiss, loadingId };
+}
+
 // useFriendRequestCount — badge count lời mời chưa xử lý
 export function useFriendRequestCount() {
     const dispatch = useAppDispatch();

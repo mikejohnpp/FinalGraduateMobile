@@ -69,6 +69,8 @@ export default {
       supabaseUrl: process.env.SUPABASE_URL ?? '',
       supabaseKey: process.env.SUPABASE_KEY ?? '',
       supabaseMediaBucket: process.env.SUPABASE_MEDIA_BUCKET ?? 'media',
+      turnUsername: process.env.TURN_USERNAME ?? '',
+      turnCredential: process.env.TURN_CREDENTIAL ?? '',
     },
   },
 };

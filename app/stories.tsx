@@ -131,8 +131,7 @@ export default function StoriesScreen() {
               <View
                 className="h-full bg-white"
                 style={{
-                  width:
-                    i < storyIndex ? '100%' : i === storyIndex ? `${progress * 100}%` : '0%',
+                  width: i < storyIndex ? '100%' : i === storyIndex ? `${progress * 100}%` : '0%',
                 }}
               />
             </View>
@@ -161,38 +160,45 @@ export default function StoriesScreen() {
           </Pressable>
         </View>
 
-        {/* Nội dung story */}
+        {/* Nội dung story — dùng cách layer chồng nhau (giống FE) thay vì if/else */}
         <View className="flex-1">
-          {activeStory.color && !imageUrl && !hasVideo ? (
+          {/* Layer 1: nền màu — render khi story có color HOẶC là text-only (content mà không có media) */}
+          {(activeStory.color || (activeStory.content && !imageUrl && !hasVideo)) && (
             <View
-              className="flex-1 items-center justify-center p-6"
-              style={{ backgroundColor: activeStory.color }}>
-              {activeStory.content && (
+              className="absolute inset-0 items-center justify-center p-6"
+              style={{ backgroundColor: processcolorbe(activeStory.color) || '#1877F2' }}>
+              {/* Text content trên nền màu (chỉ hiện khi KHÔNG có ảnh) */}
+              {activeStory.content && !imageUrl && (
                 <Text className="text-center text-2xl font-bold text-white">
                   {activeStory.content}
                 </Text>
               )}
             </View>
-          ) : hasVideo && videoUrl ? (
-            <StoryVideo
-              url={videoUrl}
-              paused={paused}
-              onProgress={setProgress}
-              onFinish={goNext}
-            />
-          ) : imageUrl ? (
+          )}
 
-            <View className="flex-1">
+          {/* Layer 2: ảnh — phủ lên nền màu nếu có */}
+          {imageUrl && (
+            <View className="absolute inset-0">
               <Image source={{ uri: imageUrl }} style={{ flex: 1 }} contentFit="contain" />
-              {activeStory.content && (
-                <View className="absolute inset-0 items-center justify-center p-6">
-                  <Text className="text-center text-2xl font-bold text-white">
-                    {activeStory.content}
-                  </Text>
-                </View>
-              )}
             </View>
-          ) : (
+          )}
+
+          {/* Layer 3: video — phủ lên nếu KHÔNG có ảnh và KHÔNG có color */}
+          {hasVideo && videoUrl && !imageUrl && !activeStory.color && (
+            <StoryVideo url={videoUrl} paused={paused} onProgress={setProgress} onFinish={goNext} />
+          )}
+
+          {/* Layer 4: text overlay trên ảnh (khi có ảnh + content) */}
+          {imageUrl && activeStory.content && (
+            <View className="absolute inset-0 items-center justify-center p-6">
+              <Text className="text-center text-2xl font-bold text-white">
+                {activeStory.content}
+              </Text>
+            </View>
+          )}
+
+          {/* Fallback: không có gì */}
+          {!activeStory.color && !activeStory.content && !imageUrl && !hasVideo && (
             <View className="flex-1 items-center justify-center">
               <Text className="text-white">Không hiển thị được tin.</Text>
             </View>
@@ -272,3 +278,10 @@ function StoryVideo({
   );
 }
 
+function processcolorbe(text: string | null): string {
+  if (text && text.startsWith('l')) {
+    return text.split(',')[1] || text;
+  }
+
+  return text ? text : '#1877F2';
+}

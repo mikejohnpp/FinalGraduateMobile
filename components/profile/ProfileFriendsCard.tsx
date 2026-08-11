@@ -29,6 +29,9 @@ export function ProfileFriendsCard({
   const openProfile = useOpenProfile();
   const [friends, setFriends] = useState<IAuthor[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
     if (!profileUserId) return;
@@ -42,7 +45,11 @@ export function ProfileFriendsCard({
           undefined,
           { userId: profileUserId, size },
         );
-        if (!cancelled) setFriends(result?.data?.map((f) => f.user) ?? []);
+        if (!cancelled) {
+          setFriends(result?.data?.map((f) => f.user) ?? []);
+          setNextCursor(result?.nextCursor ?? null);
+          setHasMore(Boolean(result?.hasMore));
+        }
       } catch (e) {
         console.error('Lỗi khi tải bạn bè của hồ sơ:', e);
       } finally {
@@ -55,6 +62,26 @@ export function ProfileFriendsCard({
       cancelled = true;
     };
   }, [profileUserId, size]);
+
+  const handleLoadMore = async () => {
+    if (!profileUserId || !nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const result = await friendService.getSingle<CursorPageResponse<IFriendship>>(
+        API.FRIEND.BASE,
+        undefined,
+        { userId: profileUserId, size, cursor: nextCursor },
+      );
+      const newFriends = result?.data?.map((f) => f.user) ?? [];
+      setFriends((prev) => [...prev, ...newFriends]);
+      setNextCursor(result?.nextCursor ?? null);
+      setHasMore(Boolean(result?.hasMore));
+    } catch {
+      // giữ nguyên danh sách hiện tại nếu lỗi
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   return (
     <View className="bg-card px-4 py-4">
@@ -90,6 +117,21 @@ export function ProfileFriendsCard({
             <FriendMiniCard key={friend.id} friend={friend} onPress={() => openProfile(friend.id)} />
           ))}
         </View>
+      )}
+
+      {/* Nút tải thêm — chỉ hiện khi ở chế độ xem đầy đủ (không phải preview) */}
+      {!onViewAll && hasMore && (
+        <Pressable
+          className="mt-3 items-center py-2 active:opacity-70"
+          onPress={handleLoadMore}
+          disabled={loadingMore}
+        >
+          {loadingMore ? (
+            <ActivityIndicator size="small" />
+          ) : (
+            <Text className="font-semibold text-primary">Tải thêm</Text>
+          )}
+        </Pressable>
       )}
     </View>
   );
