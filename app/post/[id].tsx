@@ -52,7 +52,7 @@ export default function PostDetailScreen() {
   }, []);
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
 
       <View className="flex-row items-center gap-3 border-b border-border px-4 py-3">
@@ -64,7 +64,7 @@ export default function PostDetailScreen() {
 
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}>
         <FlatList
           data={comments}
