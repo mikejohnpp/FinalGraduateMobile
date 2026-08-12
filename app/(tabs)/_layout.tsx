@@ -3,7 +3,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useThemeColors } from '@/hooks/useTheme';
 
 export default function TabLayout() {
-  // Màu reactive theo theme sáng/tối.
   const colors = useThemeColors();
 
   return (
@@ -11,9 +10,9 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
-        // Trượt ngang khi đổi tab, cùng cảm giác với pill trong màn Nhóm.
+
         animation: 'shift',
-        // Tab đang chọn dùng màu nhấn (xanh) — đồng bộ với web.
+
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarStyle: {
@@ -21,7 +20,6 @@ export default function TabLayout() {
           borderTopColor: colors.border,
         },
 
-        // Khi ẩn label, căn icon vào giữa theo chiều dọc.
         tabBarItemStyle: {
           justifyContent: 'center',
           alignItems: 'center',
@@ -32,7 +30,6 @@ export default function TabLayout() {
           alignSelf: 'center',
         },
       }}>
-
       <Tabs.Screen
         name="index"
         options={{
@@ -78,7 +75,7 @@ export default function TabLayout() {
           ),
         }}
       />
-      {/* Các màn truy cập từ header bảng tin — ẩn khỏi tab bar */}
+
       <Tabs.Screen name="create" options={{ href: null }} />
       <Tabs.Screen name="messages" options={{ href: null }} />
     </Tabs>

@@ -1,6 +1,3 @@
-// ProfileAboutCard — khối "Giới thiệu", port từ web (ProfileAbout.tsx).
-// Giữ nguyên các dòng thông tin và cách diễn đạt của web: "Làm việc tại", "Học vị",
-// "Sống tại", tình trạng quan hệ và số người theo dõi (= friendCount).
 import { View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '@/components/ui/text';
@@ -27,9 +24,7 @@ export function ProfileAboutCard({ profile }: { profile: UserProfileDTO }) {
         {!!profile.hometown && (
           <InfoRow icon="home-outline" prefix="Đến từ" value={profile.hometown} />
         )}
-        {!!profile.relationship && (
-          <InfoRow icon="heart-outline" value={profile.relationship} />
-        )}
+        {!!profile.relationship && <InfoRow icon="heart-outline" value={profile.relationship} />}
         {!!profile.dateOfBirth && (
           <InfoRow icon="gift-outline" prefix="Sinh ngày" value={profile.dateOfBirth} />
         )}
@@ -42,7 +37,6 @@ export function ProfileAboutCard({ profile }: { profile: UserProfileDTO }) {
   );
 }
 
-// Một dòng thông tin: icon + câu dẫn (tuỳ chọn) + giá trị in đậm.
 function InfoRow({
   icon,
   prefix,

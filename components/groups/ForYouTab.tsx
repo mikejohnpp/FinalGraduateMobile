@@ -1,6 +1,12 @@
-// Tab "Dành cho bạn" — dải nhóm đã tham gia + bảng tin hoạt động của các nhóm.
 import { useCallback } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  View,
+} from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -15,7 +21,6 @@ import { useAppSelector } from '@/store/hooks';
 import type { IGroup, IPost } from '@/types';
 
 interface ForYouTabProps {
-  /** Mở tab "Nhóm của bạn" / "Khám phá" trong cùng màn hình (không đổi màn). */
   onGoToMine: () => void;
   onGoToDiscover: () => void;
 }
@@ -35,7 +40,7 @@ export function ForYouTab({ onGoToMine, onGoToDiscover }: ForYouTabProps) {
       if (!userId) return;
       return post.hasLiked ? unlike(post.id, userId) : like(post.id, userId);
     },
-    [userId, like, unlike],
+    [userId, like, unlike]
   );
 
   const handleRefresh = useCallback(() => {
@@ -43,7 +48,6 @@ export function ForYouTab({ onGoToMine, onGoToDiscover }: ForYouTabProps) {
     refetchFeed();
   }, [refetchGroups, refetchFeed]);
 
-  // Dải nhóm đã tham gia, cuộn ngang — lối vào nhanh từng nhóm.
   const joinedStrip = joinedGroups.length > 0 && (
     <View className="mb-2 bg-card pb-3">
       <View className="flex-row items-center justify-between px-4 py-2">
@@ -76,7 +80,6 @@ export function ForYouTab({ onGoToMine, onGoToDiscover }: ForYouTabProps) {
                     contentFit="cover"
                   />
                 ) : (
-                  // Nền tint primary cho chữ cái đầu — nổi rõ trên nền thẻ.
                   <View className="flex-1 items-center justify-center bg-primary/10">
                     <Text className="text-xl font-bold uppercase text-primary">
                       {group.name?.charAt(0) || '?'}

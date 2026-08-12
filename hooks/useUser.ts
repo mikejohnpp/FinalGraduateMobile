@@ -1,5 +1,3 @@
-// useUser hooks — port từ web (src/hooks/useUser.tsx).
-// Khác biệt: dùng AsyncStorage (async), expo-router để điều hướng, Alert thay cho toast.
 import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -11,232 +9,227 @@ import { userActions } from '@/store/userSlice';
 import type { RegisterFormData } from '@/types';
 
 export function useLoginUser() {
-    const dispatch = useAppDispatch();
-    const isLoading = useAppSelector((r) => r.user.isLoading);
-    const router = useRouter();
+  const dispatch = useAppDispatch();
+  const isLoading = useAppSelector((r) => r.user.isLoading);
+  const router = useRouter();
 
-    async function login(email: string, password: string) {
-        try {
-            dispatch(userActions.setIsLoading(true));
-            const response = await userService.login(email, password);
+  async function login(email: string, password: string) {
+    try {
+      dispatch(userActions.setIsLoading(true));
+      const response = await userService.login(email, password);
 
-            if (response?.data) {
-                const { token, userId } = response.data;
-                await storage.set(AUTH_TOKEN_NAME, token);
-                await storage.set(USER_ID_KEY, String(userId));
+      if (response?.data) {
+        const { token, userId } = response.data;
+        await storage.set(AUTH_TOKEN_NAME, token);
+        await storage.set(USER_ID_KEY, String(userId));
 
-                dispatch(userActions.setAccessToken(token));
-                dispatch(userActions.setUserId(userId));
-                dispatch(userActions.setLoginSuccess(true));
+        dispatch(userActions.setAccessToken(token));
+        dispatch(userActions.setUserId(userId));
+        dispatch(userActions.setLoginSuccess(true));
 
-                router.replace('/(tabs)');
-            } else {
-                dispatch(userActions.setLoginSuccess(false));
-                Alert.alert('Lỗi', response?.message || 'Đăng nhập thất bại');
-            }
-        } catch (error: any) {
-            dispatch(userActions.setLoginSuccess(false));
-            Alert.alert(
-                'Lỗi',
-                error?.response?.data?.message ||
-                'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin!',
-            );
-        } finally {
-            dispatch(userActions.setIsLoading(false));
-        }
+        router.replace('/(tabs)');
+      } else {
+        dispatch(userActions.setLoginSuccess(false));
+        Alert.alert('Lỗi', response?.message || 'Đăng nhập thất bại');
+      }
+    } catch (error: any) {
+      dispatch(userActions.setLoginSuccess(false));
+      Alert.alert(
+        'Lỗi',
+        error?.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin!'
+      );
+    } finally {
+      dispatch(userActions.setIsLoading(false));
     }
+  }
 
-    return { login, isLoading };
+  return { login, isLoading };
 }
 
 export function useLogoutUser() {
-    const dispatch = useAppDispatch();
-    const router = useRouter();
-    const isLoading = useAppSelector((r) => r.user.isLoading);
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const isLoading = useAppSelector((r) => r.user.isLoading);
 
-    async function logout() {
-        try {
-            dispatch(userActions.setIsLoading(true));
-            const res = await userService.logout().catch(() => undefined);
-            // Dù API thành công hay lỗi vẫn xoá session phía client.
-            await storage.multiRemove([AUTH_TOKEN_NAME, USER_ID_KEY]);
-            dispatch(userActions.resetUser());
-            router.replace('/login');
-            if (!res?.success) {
-                // im lặng — đã đăng xuất phía client
-            }
-        } finally {
-            dispatch(userActions.setIsLoading(false));
-        }
+  async function logout() {
+    try {
+      dispatch(userActions.setIsLoading(true));
+      const res = await userService.logout().catch(() => undefined);
+
+      await storage.multiRemove([AUTH_TOKEN_NAME, USER_ID_KEY]);
+      dispatch(userActions.resetUser());
+      router.replace('/login');
+      if (!res?.success) {
+      }
+    } finally {
+      dispatch(userActions.setIsLoading(false));
     }
+  }
 
-    return { logout, isLoading };
+  return { logout, isLoading };
 }
 
 export function useUserRegister() {
-    const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-    async function register(data: RegisterFormData) {
-        setError(null);
+  async function register(data: RegisterFormData) {
+    setError(null);
 
-        if (
-            !data.email.trim() ||
-            !data.password.trim() ||
-            !data.confirmPassword.trim() ||
-            !data.username.trim()
-        ) {
-            setError('Vui lòng điền đầy đủ thông tin');
-            return false;
-        }
-        if (data.password !== data.confirmPassword) {
-            setError('Mật khẩu xác nhận không khớp');
-            return false;
-        }
-        if (data.password.length < 6) {
-            setError('Mật khẩu phải có ít nhất 6 ký tự');
-            return false;
-        }
-
-        setLoading(true);
-        try {
-            const res = await userService.register(
-                data.username,
-                data.email,
-                data.password,
-                data.confirmPassword,
-            );
-            if (res?.success) {
-                Alert.alert(
-                    'Thành công',
-                    'Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.',
-                );
-            }
-            return res?.success ?? false;
-        } catch (e: any) {
-            const msg = e?.response?.data?.message ?? 'Đăng ký thất bại';
-            setError(msg);
-            return false;
-        } finally {
-            setLoading(false);
-        }
+    if (
+      !data.email.trim() ||
+      !data.password.trim() ||
+      !data.confirmPassword.trim() ||
+      !data.username.trim()
+    ) {
+      setError('Vui lòng điền đầy đủ thông tin');
+      return false;
+    }
+    if (data.password !== data.confirmPassword) {
+      setError('Mật khẩu xác nhận không khớp');
+      return false;
+    }
+    if (data.password.length < 6) {
+      setError('Mật khẩu phải có ít nhất 6 ký tự');
+      return false;
     }
 
-    return { register, error, loading };
+    setLoading(true);
+    try {
+      const res = await userService.register(
+        data.username,
+        data.email,
+        data.password,
+        data.confirmPassword
+      );
+      if (res?.success) {
+        Alert.alert(
+          'Thành công',
+          'Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.'
+        );
+      }
+      return res?.success ?? false;
+    } catch (e: any) {
+      const msg = e?.response?.data?.message ?? 'Đăng ký thất bại';
+      setError(msg);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return { register, error, loading };
 }
 
 export function useForgotPassword() {
-    const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-    // Bước 1 — gửi OTP về email.
-    async function sendOtp(email: string): Promise<boolean> {
-        setError(null);
-        if (!email.trim()) {
-            setError('Vui lòng nhập email');
-            return false;
-        }
-        setLoading(true);
-        try {
-            const res = await userService.forgotPassword(email.trim());
-            return res?.success ?? false;
-        } catch (e: any) {
-            setError(e?.response?.data?.message ?? 'Không gửi được mã xác nhận');
-            return false;
-        } finally {
-            setLoading(false);
-        }
+  async function sendOtp(email: string): Promise<boolean> {
+    setError(null);
+    if (!email.trim()) {
+      setError('Vui lòng nhập email');
+      return false;
     }
-
-    // Bước 2 — xác nhận OTP.
-    async function verifyOtp(email: string, otp: string): Promise<boolean> {
-        setError(null);
-        if (!otp.trim()) {
-            setError('Vui lòng nhập mã OTP');
-            return false;
-        }
-        setLoading(true);
-        try {
-            const res = await userService.verifyOtp(email.trim(), otp.trim());
-            return res?.success ?? false;
-        } catch (e: any) {
-            setError(e?.response?.data?.message ?? 'Mã OTP không hợp lệ');
-            return false;
-        } finally {
-            setLoading(false);
-        }
+    setLoading(true);
+    try {
+      const res = await userService.forgotPassword(email.trim());
+      return res?.success ?? false;
+    } catch (e: any) {
+      setError(e?.response?.data?.message ?? 'Không gửi được mã xác nhận');
+      return false;
+    } finally {
+      setLoading(false);
     }
+  }
 
-    // Bước 3 — đặt lại mật khẩu.
-    async function resetPassword(
-        email: string,
-        otp: string,
-        newPassword: string,
-        confirmPassword: string,
-    ): Promise<boolean> {
-        setError(null);
-        if (!newPassword.trim() || !confirmPassword.trim()) {
-            setError('Vui lòng điền đầy đủ thông tin');
-            return false;
-        }
-        if (newPassword !== confirmPassword) {
-            setError('Mật khẩu xác nhận không khớp');
-            return false;
-        }
-        if (newPassword.length < 6) {
-            setError('Mật khẩu phải có ít nhất 6 ký tự');
-            return false;
-        }
-        setLoading(true);
-        try {
-            const res = await userService.resetPassword(
-                email.trim(),
-                otp.trim(),
-                newPassword,
-                confirmPassword,
-            );
-            if (res?.success) {
-                Alert.alert('Thành công', 'Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại.');
-            }
-            return res?.success ?? false;
-        } catch (e: any) {
-            setError(e?.response?.data?.message ?? 'Đặt lại mật khẩu thất bại');
-            return false;
-        } finally {
-            setLoading(false);
-        }
+  async function verifyOtp(email: string, otp: string): Promise<boolean> {
+    setError(null);
+    if (!otp.trim()) {
+      setError('Vui lòng nhập mã OTP');
+      return false;
     }
+    setLoading(true);
+    try {
+      const res = await userService.verifyOtp(email.trim(), otp.trim());
+      return res?.success ?? false;
+    } catch (e: any) {
+      setError(e?.response?.data?.message ?? 'Mã OTP không hợp lệ');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }
 
-    return { sendOtp, verifyOtp, resetPassword, loading, error };
+  async function resetPassword(
+    email: string,
+    otp: string,
+    newPassword: string,
+    confirmPassword: string
+  ): Promise<boolean> {
+    setError(null);
+    if (!newPassword.trim() || !confirmPassword.trim()) {
+      setError('Vui lòng điền đầy đủ thông tin');
+      return false;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('Mật khẩu xác nhận không khớp');
+      return false;
+    }
+    if (newPassword.length < 6) {
+      setError('Mật khẩu phải có ít nhất 6 ký tự');
+      return false;
+    }
+    setLoading(true);
+    try {
+      const res = await userService.resetPassword(
+        email.trim(),
+        otp.trim(),
+        newPassword,
+        confirmPassword
+      );
+      if (res?.success) {
+        Alert.alert('Thành công', 'Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại.');
+      }
+      return res?.success ?? false;
+    } catch (e: any) {
+      setError(e?.response?.data?.message ?? 'Đặt lại mật khẩu thất bại');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return { sendOtp, verifyOtp, resetPassword, loading, error };
 }
 
 export function useUserProfile() {
-    const dispatch = useAppDispatch();
-    const userId = useAppSelector((r) => r.user.userId);
-    const profile = useAppSelector((r) => r.user.profile);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+  const userId = useAppSelector((r) => r.user.userId);
+  const profile = useAppSelector((r) => r.user.profile);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    const fetchProfile = useCallback(async () => {
-        if (!userId) return;
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await userService.getProfile(userId);
-            if (response?.data) {
-                dispatch(userActions.setProfile(response.data));
-            }
-        } catch (e: any) {
-            setError(e?.response?.data?.message || 'Không thể tải thông tin người dùng');
-        } finally {
-            setLoading(false);
-        }
-    }, [userId, dispatch]);
+  const fetchProfile = useCallback(async () => {
+    if (!userId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await userService.getProfile(userId);
+      if (response?.data) {
+        dispatch(userActions.setProfile(response.data));
+      }
+    } catch (e: any) {
+      setError(e?.response?.data?.message || 'Không thể tải thông tin người dùng');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, dispatch]);
 
-    useEffect(() => {
-        if (!userId || profile) return;
-        fetchProfile();
-    }, [userId, profile, fetchProfile]);
+  useEffect(() => {
+    if (!userId || profile) return;
+    fetchProfile();
+  }, [userId, profile, fetchProfile]);
 
-    return { profile, loading, error, refetch: fetchProfile };
+  return { profile, loading, error, refetch: fetchProfile };
 }

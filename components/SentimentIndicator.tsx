@@ -1,5 +1,3 @@
-// SentimentIndicator — badge cảm xúc (sentiment) cho post/comment. Port từ web (SentimentIndicator.tsx).
-// Mobile không có tooltip hover nên độ tin cậy hiển thị luôn cạnh nhãn.
 import { View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text } from '@/components/ui/text';
@@ -43,7 +41,6 @@ const SENTIMENT_CONFIG: Record<
 export function SentimentIndicator({ data }: { data: SentimentData }) {
   const colors = useThemeColors();
 
-  // Trường hợp không phân tích được.
   if (data.cancelReason) {
     return (
       <View className="flex-row items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5">
@@ -63,7 +60,8 @@ export function SentimentIndicator({ data }: { data: SentimentData }) {
   const confPercent = data.confidence ? Math.round(data.confidence * 100) : 0;
 
   return (
-    <View className={`flex-row items-center gap-1 rounded-full border px-2 py-0.5 ${config.bgClass}`}>
+    <View
+      className={`flex-row items-center gap-1 rounded-full border px-2 py-0.5 ${config.bgClass}`}>
       <Ionicons name={config.icon} size={12} color={config.iconColor} />
       <Text className={`text-[10px] font-medium ${config.textClass}`}>
         {config.label}

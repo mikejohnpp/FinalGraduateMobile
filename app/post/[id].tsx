@@ -1,4 +1,3 @@
-// Màn hình chi tiết bài viết + bình luận — port từ web (CommentModal).
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -39,7 +38,7 @@ export default function PostDetailScreen() {
   const handleSend = useCallback(async () => {
     if (!canSend) return;
     const media = await upload();
-    if (media === null) return; // upload lỗi (Alert đã hiển thị trong hook)
+    if (media === null) return;
     const result = await create(text, replyTo?.id ?? null, media.length > 0 ? media : null);
     if (result) {
       setText('');
@@ -56,7 +55,6 @@ export default function PostDetailScreen() {
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Header */}
       <View className="flex-row items-center gap-3 border-b border-border px-4 py-3">
         <Button variant="ghost" className="h-auto p-1" onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color={colors.foreground} />
@@ -94,7 +92,6 @@ export default function PostDetailScreen() {
           }
         />
 
-        {/* Composer */}
         <View className="border-t border-border px-4 py-2">
           {replyTo && (
             <View className="mb-1 flex-row items-center justify-between">
@@ -108,7 +105,6 @@ export default function PostDetailScreen() {
             </View>
           )}
 
-          {/* Preview media đã chọn */}
           {drafts.length > 0 && (
             <View className="mb-2">
               <MediaDraftPicker
@@ -138,11 +134,7 @@ export default function PostDetailScreen() {
               multiline
               editable={!busy}
             />
-            <Button
-              variant="ghost"
-              className="h-auto p-2"
-              disabled={!canSend}
-              onPress={handleSend}>
+            <Button variant="ghost" className="h-auto p-2" disabled={!canSend} onPress={handleSend}>
               <Ionicons
                 name="send"
                 size={22}

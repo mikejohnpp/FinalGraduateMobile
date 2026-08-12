@@ -1,13 +1,9 @@
-// ProfileTabsBar — thanh tab của trang hồ sơ, port từ web (ProfileTabs.tsx).
-// Dùng chung cho hồ sơ của mình (app/(tabs)/profile.tsx) và của người khác (app/user/[id].tsx)
-// để hai màn hình luôn có cùng bộ tab: Bài viết | Giới thiệu | Bạn bè | Reels.
 import { Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { useThemeColors } from '@/hooks/useTheme';
 
 export type ProfileTab = 'posts' | 'about' | 'friends' | 'reels';
 
-// Nhãn tiếng Việt giống web, giữ đúng thứ tự tab của web.
 const TABS: { key: ProfileTab; label: string }[] = [
   { key: 'posts', label: 'Bài viết' },
   { key: 'about', label: 'Giới thiệu' },
@@ -25,7 +21,6 @@ export function ProfileTabsBar({ activeTab, onTabChange }: ProfileTabsBarProps) 
 
   return (
     <View className="border-t border-border bg-card">
-      {/* Cuộn ngang để nhãn không bị bóp trên máy màn hình nhỏ */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

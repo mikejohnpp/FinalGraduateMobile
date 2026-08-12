@@ -1,5 +1,3 @@
-// Màn hình Nhóm — 3 tab trong cùng một màn hình, chuyển bằng pill hoặc vuốt ngang (PagerView).
-// Giữ nguyên một màn hình giúp không mất trạng thái cuộn/dữ liệu khi đổi tab.
 import { useCallback, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,14 +22,12 @@ export default function GroupsScreen() {
   const pagerRef = useRef<PagerView>(null);
   const [page, setPage] = useState(TAB_FOR_YOU);
 
-  // Bấm pill: cho pager trượt sang trang tương ứng (state đồng bộ qua onPageSelected).
   const goToPage = useCallback((index: number) => {
     pagerRef.current?.setPage(index);
   }, []);
 
   return (
     <SafeAreaView className="flex-1 bg-muted" edges={['top']}>
-      {/* Header: tiêu đề + tạo nhóm + tìm kiếm */}
       <View className="flex-row items-center justify-between bg-card px-4 py-2">
         <Text variant="large">Nhóm</Text>
         <View className="flex-row items-center">
@@ -52,7 +48,6 @@ export default function GroupsScreen() {
         </View>
       </View>
 
-      {/* Pill chọn tab */}
       <View className="border-b border-border bg-card">
         <GroupPills active={page} onChange={goToPage} />
       </View>

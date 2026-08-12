@@ -1,4 +1,3 @@
-// CommentItem — một bình luận + phần replies (lazy load). Port ý tưởng từ web (CommentItem).
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Image } from 'expo-image';
@@ -45,7 +44,6 @@ export function CommentItem({ comment, postId, onReply, isReply = false }: Comme
 
   return (
     <View className={isReply ? 'flex-row gap-2 pl-10' : 'flex-row gap-2'}>
-      {/* Avatar bấm được để mở hồ sơ người bình luận */}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Xem hồ sơ của ${displayName}`}
@@ -69,7 +67,6 @@ export function CommentItem({ comment, postId, onReply, isReply = false }: Comme
       </Pressable>
 
       <View className="flex-1">
-        {/* Bubble — tên trong bong bóng cũng mở hồ sơ */}
         {(!!comment.content || comment.media?.length > 0) && (
           <View className="self-start rounded-2xl bg-muted px-3 py-2">
             <Pressable
@@ -83,15 +80,12 @@ export function CommentItem({ comment, postId, onReply, isReply = false }: Comme
           </View>
         )}
 
-        {/* Media của comment */}
         {comment.media?.length > 0 && (
           <View className="mt-1">
             <MediaGallery media={comment.media} size="comment" />
           </View>
         )}
 
-
-        {/* Meta row — thời gian, sentiment, nút thích/phản hồi (inline như web) */}
         <View className="mt-1 flex-row flex-wrap items-center gap-3 pl-1">
           <Text variant="muted" className="text-xs">
             {timeAgo(comment.createdAt)}
@@ -122,7 +116,6 @@ export function CommentItem({ comment, postId, onReply, isReply = false }: Comme
           )}
         </View>
 
-        {/* Replies toggle */}
         {!isReply && comment.replyCount > 0 && (
           <Button variant="link" className="h-auto justify-start p-0 pl-1" onPress={toggleReplies}>
             <Ionicons name="return-down-forward-outline" size={14} color={colors.mutedForeground} />
@@ -132,7 +125,6 @@ export function CommentItem({ comment, postId, onReply, isReply = false }: Comme
           </Button>
         )}
 
-        {/* Replies list */}
         {showReplies && (
           <View className="mt-2 gap-3">
             {replies.map((reply) => (

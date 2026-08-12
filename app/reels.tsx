@@ -1,5 +1,3 @@
-// Màn hình Reels — port từ web (src/views/reels/Reels.tsx).
-// Feed video dọc, vuốt lên/xuống để chuyển reel; video tự phát khi đang hiển thị.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Dimensions, FlatList, Pressable, View, type ViewToken } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,7 +16,7 @@ const { height: SCREEN_H } = Dimensions.get('window');
 
 export default function ReelsScreen() {
   const router = useRouter();
-  // start — chỉ số reel muốn mở sẵn (khi vào từ lưới Reels trong hồ sơ).
+
   const { userId, start } = useLocalSearchParams<{ userId?: string; start?: string }>();
   const uid = userId ? Number(userId) : undefined;
   const startIndex = Number(start);
@@ -29,8 +27,6 @@ export default function ReelsScreen() {
   const [muted, setMuted] = useState(false);
   const [itemHeight, setItemHeight] = useState(SCREEN_H);
 
-  // Nhảy tới reel được chọn sau khi trang đầu đã về. Chỉ làm một lần: những lần
-  // scroll sau là do người dùng vuốt.
   const listRef = useRef<FlatList<IStoryDTO>>(null);
   const jumpedRef = useRef(initialIndex === 0);
   useEffect(() => {
@@ -39,27 +35,32 @@ export default function ReelsScreen() {
     listRef.current?.scrollToOffset({ offset: itemHeight * initialIndex, animated: false });
   }, [reels.length, initialIndex, itemHeight]);
 
-  const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      if (viewableItems.length > 0 && viewableItems[0].index != null) {
-        setActiveIndex(viewableItems[0].index);
-      }
-    },
-  );
+  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    if (viewableItems.length > 0 && viewableItems[0].index != null) {
+      setActiveIndex(viewableItems[0].index);
+    }
+  });
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 80 });
 
   const renderItem = useCallback(
-    ({ item, index }: { item: IStoryDTO; index: number }) => (
-      <ReelItem
-        reel={item}
-        active={index === activeIndex}
-        muted={muted}
-        height={itemHeight}
-        onToggleMute={() => setMuted((m) => !m)}
-        onOpenProfile={() => router.push(`/user/${item.user.id}`)}
-      />
-    ),
-    [activeIndex, muted, itemHeight, router],
+    ({ item, index }: { item: IStoryDTO; index: number }) => {
+      const active = index === activeIndex;
+
+      const shouldLoad = Math.abs(index - activeIndex) <= 1;
+
+      return (
+        <ReelItem
+          reel={item}
+          active={active}
+          shouldLoad={shouldLoad}
+          muted={muted}
+          height={itemHeight}
+          onToggleMute={() => setMuted((m) => !m)}
+          onOpenProfile={() => router.push(`/user/${item.user.id}`)}
+        />
+      );
+    },
+    [activeIndex, muted, itemHeight, router]
   );
 
   if (!loading && reels.length === 0) {
@@ -74,9 +75,7 @@ export default function ReelsScreen() {
   }
 
   return (
-    <View
-      className="flex-1 bg-black"
-      onLayout={(e) => setItemHeight(e.nativeEvent.layout.height)}>
+    <View className="flex-1 bg-black" onLayout={(e) => setItemHeight(e.nativeEvent.layout.height)}>
       <FlatList
         ref={listRef}
         data={reels}
@@ -84,6 +83,10 @@ export default function ReelsScreen() {
         renderItem={renderItem}
         pagingEnabled
         showsVerticalScrollIndicator={false}
+        windowSize={3}
+        maxToRenderPerBatch={1}
+        initialNumToRender={1}
+        removeClippedSubviews={true}
         snapToInterval={itemHeight}
         snapToAlignment="start"
         decelerationRate="fast"
@@ -98,7 +101,6 @@ export default function ReelsScreen() {
         })}
       />
 
-      {/* Nút đóng */}
       <SafeAreaView className="absolute left-0 top-0" edges={['top']}>
         <Pressable
           onPress={() => router.back()}
@@ -113,6 +115,7 @@ export default function ReelsScreen() {
 function ReelItem({
   reel,
   active,
+  shouldLoad,
   muted,
   height,
   onToggleMute,
@@ -120,6 +123,7 @@ function ReelItem({
 }: {
   reel: IStoryDTO;
   active: boolean;
+  shouldLoad: boolean;
   muted: boolean;
   height: number;
   onToggleMute: () => void;
@@ -128,13 +132,11 @@ function ReelItem({
   const videoUrl = resolveMediaUrl(reel.urlVideo);
   const avatar = resolveMediaUrl(reel.user.avatarUrl);
 
-  // Trình phát của expo-video: lặp lại, mặc định không hiện điều khiển.
-  const player = useVideoPlayer(videoUrl ?? '', (p) => {
+  const player = useVideoPlayer(shouldLoad ? (videoUrl ?? '') : null, (p) => {
     p.loop = true;
     p.muted = muted;
   });
 
-  // Chỉ phát reel đang hiển thị; các reel khác tạm dừng để tiết kiệm tài nguyên.
   useEffect(() => {
     if (active) {
       player.play();
@@ -143,7 +145,6 @@ function ReelItem({
     }
   }, [active, player]);
 
-  // Đồng bộ trạng thái tắt/mở tiếng.
   useEffect(() => {
     player.muted = muted;
   }, [muted, player]);
@@ -160,8 +161,6 @@ function ReelItem({
         />
       )}
 
-
-      {/* Nút tắt/mở tiếng */}
       <Pressable
         onPress={onToggleMute}
         className="absolute right-4 top-1/2 size-11 items-center justify-center rounded-full bg-black/40 active:opacity-70">
@@ -172,26 +171,27 @@ function ReelItem({
         />
       </Pressable>
 
-      {/* Thông tin tác giả + chú thích */}
-      <View className="absolute inset-x-0 bottom-0 p-4 pb-8">
-        <Pressable className="flex-row items-center gap-3" onPress={onOpenProfile}>
-          <View className="size-10 items-center justify-center overflow-hidden rounded-full border-2 border-primary bg-muted">
-            {avatar ? (
-              <Image source={{ uri: avatar }} style={{ width: 40, height: 40 }} />
-            ) : (
-              <Text className="font-bold text-white">
-                {reel.user.username.charAt(0).toUpperCase()}
-              </Text>
-            )}
-          </View>
-          <Text className="text-base font-semibold text-white">{reel.user.username}</Text>
-        </Pressable>
-        {reel.content ? (
-          <Text numberOfLines={2} className="mt-2 text-sm text-white/90">
-            {reel.content}
-          </Text>
-        ) : null}
-      </View>
+      <SafeAreaView edges={['bottom']} className="pointer-events-none absolute inset-x-0 bottom-0">
+        <View className="pointer-events-auto p-4 pb-8">
+          <Pressable className="flex-row items-center gap-3" onPress={onOpenProfile}>
+            <View className="size-10 items-center justify-center overflow-hidden rounded-full border-2 border-primary bg-muted">
+              {avatar ? (
+                <Image source={{ uri: avatar }} style={{ width: 40, height: 40 }} />
+              ) : (
+                <Text className="font-bold text-white">
+                  {reel.user.username.charAt(0).toUpperCase()}
+                </Text>
+              )}
+            </View>
+            <Text className="text-base font-semibold text-white">{reel.user.username}</Text>
+          </Pressable>
+          {reel.content ? (
+            <Text numberOfLines={2} className="mt-2 text-sm text-white/90">
+              {reel.content}
+            </Text>
+          ) : null}
+        </View>
+      </SafeAreaView>
     </View>
   );
 }

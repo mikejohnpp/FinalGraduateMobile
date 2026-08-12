@@ -1,4 +1,3 @@
-// Màn hình danh sách hội thoại — port ý tưởng từ web (Sidebar).
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,14 +24,12 @@ export default function MessagesScreen() {
   const router = useRouter();
   const [query, setQuery] = useState('');
 
-  // Refetch mỗi khi quay lại tab.
   useFocusEffect(
     useCallback(() => {
       refetch();
-    }, [refetch]),
+    }, [refetch])
   );
 
-  // Tên hiển thị: nhóm dùng name, 1-1 dùng tên thành viên còn lại.
   const getDisplayName = (conv: Conversation) => {
     if (conv.group) return conv.name;
     const other = conv.members.find((m) => m.id !== userId);
@@ -45,20 +42,14 @@ export default function MessagesScreen() {
     return resolveMediaUrl(other?.avatarUrl);
   };
 
-  // Chỉ hội thoại 1-1 mới có "đối phương" để mở hồ sơ; chat nhóm thì avatar/tên
-  // đại diện cho hội thoại chứ không phải một người dùng.
   const getPeerId = (conv: Conversation) => {
     if (conv.group) return undefined;
     return conv.members.find((m) => m.id !== userId)?.id;
   };
 
-
-  // Online = có thành viên khác mình đang online (khớp cách web tính trong
-  // ConversationItem, nhưng bỏ chính mình để dot không luôn xanh).
   const isConversationOnline = (conv: Conversation) =>
     conv.members.some((m) => m.id !== userId && onlineUsers.includes(m.id));
 
-  // Lọc hội thoại theo tên hiển thị (khớp web: tìm theo tiêu đề).
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return conversations;
@@ -72,7 +63,6 @@ export default function MessagesScreen() {
         <Text variant="large">Đoạn chat</Text>
       </View>
 
-      {/* Ô tìm kiếm hội thoại */}
       <View className="flex-row items-center gap-2 bg-card px-4 pb-3">
         <View className="flex-1 flex-row items-center gap-2 rounded-full bg-muted px-3">
           <Ionicons name="search" size={18} color={colors.mutedForeground} />
@@ -104,15 +94,11 @@ export default function MessagesScreen() {
             <Pressable
               className="flex-row items-center gap-3 px-4 py-3 active:bg-muted"
               onPress={() => router.push(`/chat/${item.id}`)}>
-              {/* Chat 1-1: bấm avatar mở hồ sơ đối phương. Chat nhóm: avatar đại
-                  diện hội thoại nên vẫn mở đoạn chat. */}
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={peerId ? `Xem hồ sơ của ${name}` : `Mở đoạn chat ${name}`}
                 className="relative active:opacity-70"
-                onPress={() =>
-                  peerId ? openProfile(peerId) : router.push(`/chat/${item.id}`)
-                }>
+                onPress={() => (peerId ? openProfile(peerId) : router.push(`/chat/${item.id}`))}>
                 {avatarUri ? (
                   <Image
                     source={{ uri: avatarUri }}
@@ -120,13 +106,15 @@ export default function MessagesScreen() {
                     contentFit="cover"
                   />
                 ) : (
-                  <View className="size-13 items-center justify-center rounded-full bg-muted" style={{ width: 52, height: 52 }}>
+                  <View
+                    className="size-13 items-center justify-center rounded-full bg-muted"
+                    style={{ width: 52, height: 52 }}>
                     <Text className="text-xl font-bold uppercase text-muted-foreground">
                       {name?.charAt(0) || '?'}
                     </Text>
                   </View>
                 )}
-                {/* Dấu trạng thái: xanh = online, hổ phách = offline (giống web) */}
+
                 <View
                   className={`absolute bottom-0 right-0 size-3.5 rounded-full border-2 border-background ${online ? 'bg-green-500' : 'bg-amber-400'}`}
                 />

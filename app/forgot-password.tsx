@@ -1,7 +1,12 @@
-// Màn hình quên mật khẩu — port từ web (src/views/auth/ForgotPassword.tsx).
-// Flow 3 bước: nhập email → nhập OTP → đặt lại mật khẩu.
 import { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from 'react-native';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  TextInput,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/button';
@@ -56,7 +61,6 @@ export default function ForgotPasswordScreen() {
             </Text>
           </View>
 
-          {/* Bước 1: Nhập email */}
           {step === 'email' && (
             <View className="gap-4">
               <View className="gap-2">
@@ -86,7 +90,6 @@ export default function ForgotPasswordScreen() {
             </View>
           )}
 
-          {/* Bước 2: Nhập OTP */}
           {step === 'otp' && (
             <View className="gap-4">
               <View className="gap-2">
@@ -124,7 +127,6 @@ export default function ForgotPasswordScreen() {
             </View>
           )}
 
-          {/* Bước 3: Đặt lại mật khẩu */}
           {step === 'reset' && (
             <View className="gap-4">
               <View className="gap-2">
@@ -158,7 +160,10 @@ export default function ForgotPasswordScreen() {
 
               {error && <Text className="text-sm text-destructive">{error}</Text>}
 
-              <Button className="mt-2 rounded-full" onPress={handleResetPassword} disabled={loading}>
+              <Button
+                className="mt-2 rounded-full"
+                onPress={handleResetPassword}
+                disabled={loading}>
                 {loading && <ActivityIndicator size="small" color="white" />}
                 <Text>Đặt lại mật khẩu</Text>
               </Button>

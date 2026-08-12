@@ -1,12 +1,9 @@
-// GroupPills — thanh pill ngang chọn tab trong khu vực Nhóm.
-// Chỉ đổi page của pager (không điều hướng màn hình) để giữ trạng thái cuộn/dữ liệu của từng tab.
 import { Pressable, ScrollView } from 'react-native';
 import { Text } from '@/components/ui/text';
 
 export const GROUP_TAB_LABELS = ['Dành cho bạn', 'Nhóm của bạn', 'Khám phá'] as const;
 
 interface GroupPillsProps {
-  /** Chỉ số tab đang mở (0..2). */
   active: number;
   onChange: (index: number) => void;
 }

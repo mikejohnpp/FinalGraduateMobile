@@ -1,4 +1,3 @@
-// Màn hình tạo bài viết — port ý tưởng từ web (CreatePostCard).
 import { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,9 +24,8 @@ export default function CreatePostScreen() {
   const handleSubmit = async () => {
     if (!userId || !canSubmit) return;
 
-    // Upload media lên Supabase trước, lấy URL rồi đính vào body.
     const media = await upload();
-    if (media === null) return; // upload lỗi (Alert đã hiển thị trong hook)
+    if (media === null) return;
 
     const result = await create({
       userId,
@@ -49,7 +47,6 @@ export default function CreatePostScreen() {
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        {/* Header */}
         <View className="flex-row items-center justify-between border-b border-border px-4 py-3">
           <Button variant="ghost" className="h-auto p-0" onPress={() => router.back()}>
             <Text className="text-muted-foreground">Huỷ</Text>

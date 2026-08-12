@@ -1,5 +1,3 @@
-// Màn hình danh sách thông báo — port ý tưởng từ web
-// (NotificationsInnerPopover + useNotification).
 import { useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,11 +6,7 @@ import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
-import {
-  useMarkAllAsRead,
-  useNotifications,
-  useUnreadCount,
-} from '@/hooks/useNotification';
+import { useMarkAllAsRead, useNotifications, useUnreadCount } from '@/hooks/useNotification';
 import { useNotificationClick } from '@/hooks/useNotificationClick';
 import { useOpenProfile } from '@/hooks/useOpenProfile';
 import { resolveMediaUrl } from '@/lib/media';
@@ -20,14 +14,10 @@ import { timeAgo } from '@/lib/time';
 import type { INotification, NotificationType } from '@/types';
 import { useThemeColors } from '@/hooks/useTheme';
 
-// Icon + màu theo loại thông báo.
-// fallbackColor: màu mặc định theo theme (do component truyền vào, vì đây là
-// hàm thuần nên không gọi được hook).
 function iconFor(
   type: NotificationType,
-  fallbackColor: string,
+  fallbackColor: string
 ): { name: keyof typeof Ionicons.glyphMap; color: string } {
-
   switch (type) {
     case 'COMMENT':
     case 'REPLY':
@@ -43,7 +33,6 @@ function iconFor(
       return { name: 'document-text', color: '#f97316' };
     default:
       return { name: 'notifications', color: fallbackColor };
-
   }
 }
 
@@ -60,7 +49,6 @@ export default function NotificationsScreen() {
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Header */}
       <View className="flex-row items-center gap-2 border-b border-border px-4 py-2">
         <Button variant="ghost" className="h-auto p-1" onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color={colors.foreground} />
@@ -75,14 +63,11 @@ export default function NotificationsScreen() {
         )}
       </View>
 
-      {/* Tabs all / unread */}
       <View className="flex-row gap-2 px-4 py-2">
         <Pressable
           className={`rounded-full px-4 py-1.5 ${unreadOnly ? 'bg-muted' : 'bg-primary'}`}
           onPress={() => setUnreadOnly(false)}>
-          <Text className={unreadOnly ? 'text-foreground' : 'text-primary-foreground'}>
-            Tất cả
-          </Text>
+          <Text className={unreadOnly ? 'text-foreground' : 'text-primary-foreground'}>Tất cả</Text>
         </Pressable>
         <Pressable
           className={`rounded-full px-4 py-1.5 ${unreadOnly ? 'bg-primary' : 'bg-muted'}`}
@@ -96,9 +81,7 @@ export default function NotificationsScreen() {
       <FlatList
         data={notifications}
         keyExtractor={(item) => String(item.id)}
-        renderItem={({ item }) => (
-          <NotificationRow item={item} onPress={() => handleClick(item)} />
-        )}
+        renderItem={({ item }) => <NotificationRow item={item} onPress={() => handleClick(item)} />}
         ItemSeparatorComponent={() => <View className="h-px bg-border" />}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
@@ -136,8 +119,6 @@ function NotificationRow({ item, onPress }: { item: INotification; onPress: () =
     <Pressable
       className={`flex-row items-center gap-3 px-4 py-3 active:bg-muted ${item.isRead ? '' : 'bg-primary/5'}`}
       onPress={onPress}>
-      {/* Avatar + badge loại — bấm avatar mở hồ sơ người gây ra thông báo,
-          bấm phần còn lại của hàng vẫn đi tới nội dung liên quan. */}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Xem hồ sơ của ${actorName}`}
@@ -165,7 +146,9 @@ function NotificationRow({ item, onPress }: { item: INotification; onPress: () =
       </Pressable>
 
       <View className="flex-1">
-        <Text numberOfLines={2} className={item.isRead ? 'text-muted-foreground' : 'text-foreground'}>
+        <Text
+          numberOfLines={2}
+          className={item.isRead ? 'text-muted-foreground' : 'text-foreground'}>
           <Text
             className="font-semibold"
             onPress={actorId ? () => openProfile(actorId) : undefined}>

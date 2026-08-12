@@ -1,4 +1,3 @@
-// Màn hình đăng ký — port từ web (src/views/auth/Register.tsx).
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -98,7 +97,10 @@ export default function RegisterScreen() {
 
             <View className="mt-4 flex-row items-center justify-center gap-1">
               <Text variant="muted">Đã có tài khoản?</Text>
-              <Button variant="link" className="h-auto p-0" onPress={() => router.replace('/login')}>
+              <Button
+                variant="link"
+                className="h-auto p-0"
+                onPress={() => router.replace('/login')}>
                 <Text className="text-primary">Đăng nhập</Text>
               </Button>
             </View>

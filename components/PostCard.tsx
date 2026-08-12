@@ -1,4 +1,3 @@
-// PostCard — thẻ bài viết trên feed. Port ý tưởng từ web (src/components/PostCard.tsx).
 import { memo, useState, useEffect } from 'react';
 import { Pressable, View } from 'react-native';
 import { Image } from 'expo-image';
@@ -18,7 +17,7 @@ interface PostCardProps {
   post: IPost;
   onToggleLike?: (post: IPost) => Promise<boolean | void> | void;
   onComment?: (post: IPost) => void;
-  // Bấm vào tên nhóm để mở nhóm (dùng ở bảng tin nhóm) — như web.
+
   onPressGroup?: (groupId: number) => void;
   likeDisabled?: boolean;
 }
@@ -49,7 +48,6 @@ function PostCardBase({
     if (onToggleLike) {
       const success = await onToggleLike(post);
       if (success === false) {
-        // Revert on failure
         setLiked(wasLiked);
         setLikesCount((prev) => prev + (wasLiked ? 1 : -1));
       }
@@ -57,7 +55,7 @@ function PostCardBase({
   };
   const avatarUri = resolveMediaUrl(post.author.avatar);
   const displayName = post.author.nickName || post.author.name;
-  // Bài viết trong nhóm: hiển thị avatar nhóm (avatar tác giả lồng ở góc) + tên nhóm ở dòng đầu — như web.
+
   const group = post.group;
   const groupAvatarUri = resolveMediaUrl(group?.avatar);
 
@@ -67,7 +65,6 @@ function PostCardBase({
 
   return (
     <View className="bg-card px-4 py-3">
-      {/* Header — avatar và tên bấm được để mở hồ sơ tác giả (hoặc nhóm) */}
       <View className="mb-3 flex-row items-center gap-3">
         {group ? (
           <Pressable
@@ -90,7 +87,7 @@ function PostCardBase({
                 </View>
               )}
             </View>
-            {/* Avatar tác giả lồng ở góc dưới phải */}
+
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`Xem hồ sơ của ${displayName}`}
@@ -177,17 +174,13 @@ function PostCardBase({
         </View>
       </View>
 
-      {/* Content */}
       {!!post.content && <Text className="mb-3 leading-6">{post.content}</Text>}
 
-      {/* Media (ảnh/video/file) — full-bleed: bù lại px-4 của card để ảnh tràn hết chiều rộng */}
       {post.media?.length > 0 && (
         <View className="-mx-4 mb-3">
           <MediaGallery media={post.media} size="post" />
         </View>
       )}
-
-      {/* Counters */}
 
       <View className="mb-1 flex-row items-center justify-between">
         <Text variant="muted" className="text-xs">
@@ -198,7 +191,6 @@ function PostCardBase({
         </Text>
       </View>
 
-      {/* Actions */}
       <View className="flex-row border-t border-border pt-1">
         <Button
           variant="ghost"

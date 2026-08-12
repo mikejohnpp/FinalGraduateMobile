@@ -1,4 +1,3 @@
-// Màn hình đăng nhập — port từ web (src/views/auth/Login.tsx).
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -33,7 +32,6 @@ export default function LoginScreen() {
         <ScrollView
           contentContainerClassName="flex-grow justify-center px-6 py-12"
           keyboardShouldPersistTaps="handled">
-          {/* Brand */}
           <View className="mb-10 items-center gap-4">
             <View className="size-24 items-center justify-center rounded-full bg-primary">
               <Text className="text-5xl font-bold text-primary-foreground">f</Text>
@@ -92,9 +90,11 @@ export default function LoginScreen() {
             </Button>
 
             <View className="mt-4 flex-row items-center justify-center gap-1">
-
               <Text variant="muted">Chưa có tài khoản?</Text>
-              <Button variant="link" className="h-auto p-0" onPress={() => router.push('/register')}>
+              <Button
+                variant="link"
+                className="h-auto p-0"
+                onPress={() => router.push('/register')}>
                 <Text className="text-primary">Đăng ký</Text>
               </Button>
             </View>

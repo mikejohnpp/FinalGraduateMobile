@@ -1,6 +1,3 @@
-// Màn hình xem tin (Story Viewer) — port từ web (src/views/story/StoryViewer.tsx).
-// Tap phải: story kế; tap trái: story trước; giữ để tạm dừng; auto-next sau 5s (ảnh/text)
-// hoặc khi video kết thúc.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Dimensions, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,7 +11,7 @@ import { THEME_COLORS } from '@/lib/theme';
 import { resolveMediaUrl } from '@/lib/media';
 import { useFriendsStories } from '@/hooks/useStory';
 
-const STORY_DURATION = 5000; // ms cho ảnh/text
+const STORY_DURATION = 5000;
 const { width: SCREEN_W } = Dimensions.get('window');
 
 function isValidUrl(u?: string | null): u is string {
@@ -29,11 +26,10 @@ export default function StoriesScreen() {
   const [groupIndex, setGroupIndex] = useState(0);
   const [storyIndex, setStoryIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [progress, setProgress] = useState(0); // 0..1 cho story hiện tại
+  const [progress, setProgress] = useState(0);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Nhảy tới group của user được chỉ định khi mở.
   useEffect(() => {
     if (!groupedStories.length || !userId) return;
     const idx = groupedStories.findIndex((g) => g.user.id === Number(userId));
@@ -70,12 +66,10 @@ export default function StoriesScreen() {
     }
   }, [activeGroup, storyIndex, groupIndex, groupedStories]);
 
-  // Reset tiến trình khi chuyển story.
   useEffect(() => {
     setProgress(0);
   }, [storyIndex, groupIndex]);
 
-  // Timer auto-next cho ảnh/text (video tự xử lý qua onPlaybackStatusUpdate).
   useEffect(() => {
     if (hasVideo || paused || !activeStory) {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -124,7 +118,6 @@ export default function StoriesScreen() {
   return (
     <View className="flex-1 bg-black">
       <SafeAreaView className="flex-1" edges={['top', 'bottom']}>
-        {/* Thanh tiến trình */}
         <View className="flex-row gap-1 px-2 pt-2">
           {activeGroup.stories.map((s, i) => (
             <View key={s.id} className="h-1 flex-1 overflow-hidden rounded-full bg-white/30">
@@ -138,7 +131,6 @@ export default function StoriesScreen() {
           ))}
         </View>
 
-        {/* Header: avatar + tên + nút pause + đóng */}
         <View className="flex-row items-center gap-3 px-4 py-3">
           <Pressable
             onPress={() => router.push(`/user/${activeGroup.user.id}`)}
@@ -160,14 +152,11 @@ export default function StoriesScreen() {
           </Pressable>
         </View>
 
-        {/* Nội dung story — dùng cách layer chồng nhau (giống FE) thay vì if/else */}
         <View className="flex-1">
-          {/* Layer 1: nền màu — render khi story có color HOẶC là text-only (content mà không có media) */}
           {(activeStory.color || (activeStory.content && !imageUrl && !hasVideo)) && (
             <View
               className="absolute inset-0 items-center justify-center p-6"
               style={{ backgroundColor: processcolorbe(activeStory.color) || '#1877F2' }}>
-              {/* Text content trên nền màu (chỉ hiện khi KHÔNG có ảnh) */}
               {activeStory.content && !imageUrl && (
                 <Text className="text-center text-2xl font-bold text-white">
                   {activeStory.content}
@@ -176,19 +165,16 @@ export default function StoriesScreen() {
             </View>
           )}
 
-          {/* Layer 2: ảnh — phủ lên nền màu nếu có */}
           {imageUrl && (
             <View className="absolute inset-0">
               <Image source={{ uri: imageUrl }} style={{ flex: 1 }} contentFit="contain" />
             </View>
           )}
 
-          {/* Layer 3: video — phủ lên nếu KHÔNG có ảnh và KHÔNG có color */}
           {hasVideo && videoUrl && !imageUrl && !activeStory.color && (
             <StoryVideo url={videoUrl} paused={paused} onProgress={setProgress} onFinish={goNext} />
           )}
 
-          {/* Layer 4: text overlay trên ảnh (khi có ảnh + content) */}
           {imageUrl && activeStory.content && (
             <View className="absolute inset-0 items-center justify-center p-6">
               <Text className="text-center text-2xl font-bold text-white">
@@ -197,14 +183,12 @@ export default function StoriesScreen() {
             </View>
           )}
 
-          {/* Fallback: không có gì */}
           {!activeStory.color && !activeStory.content && !imageUrl && !hasVideo && (
             <View className="flex-1 items-center justify-center">
               <Text className="text-white">Không hiển thị được tin.</Text>
             </View>
           )}
 
-          {/* Vùng chạm điều hướng: trái = prev, phải = next; giữ = tạm dừng */}
           <View className="absolute inset-0 flex-row">
             <Pressable
               className="flex-1"
@@ -226,8 +210,6 @@ export default function StoriesScreen() {
   );
 }
 
-// Video của story dùng expo-video. Theo dõi tiến trình phát để cập nhật thanh progress,
-// tự chuyển story kế khi phát xong. Tạm dừng/tiếp tục theo `paused`.
 function StoryVideo({
   url,
   paused,
@@ -244,7 +226,6 @@ function StoryVideo({
     p.play();
   });
 
-  // Tạm dừng/tiếp tục theo trạng thái paused.
   useEffect(() => {
     if (paused) {
       player.pause();
@@ -253,7 +234,6 @@ function StoryVideo({
     }
   }, [paused, player]);
 
-  // Cập nhật tiến trình mỗi ~100ms; phát hiện kết thúc để chuyển story kế.
   useEffect(() => {
     const interval = setInterval(() => {
       const duration = player.duration;

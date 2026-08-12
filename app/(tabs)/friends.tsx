@@ -1,5 +1,3 @@
-// Màn hình Bạn bè — port ý tưởng từ web (Friends + partials).
-// 3 tab con: Lời mời, Gợi ý, Bạn bè.
 import { useState } from 'react';
 import { ActivityIndicator, FlatList, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,12 +21,10 @@ export default function FriendsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-muted" edges={['top']}>
-      {/* Header */}
       <View className="bg-card px-4 py-3">
         <Text variant="large">Bạn bè</Text>
       </View>
 
-      {/* Segmented tabs */}
       <View className="flex-row border-b border-border bg-card">
         <TabButton label="Lời mời" active={tab === 'requests'} onPress={() => setTab('requests')} />
         <TabButton

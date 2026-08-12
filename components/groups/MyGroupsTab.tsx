@@ -1,4 +1,3 @@
-// Tab "Nhóm của bạn" — nhóm mình quản lý và nhóm đã tham gia.
 import { useCallback, useMemo } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -8,7 +7,6 @@ import { Text } from '@/components/ui/text';
 import { useGroupsData } from '@/hooks/useGroup';
 import type { IGroup } from '@/types';
 
-// Mỗi phần tử của danh sách: header phần, một nhóm, hoặc dòng trống.
 type Row =
   | { kind: 'header'; key: string; title: string }
   | { kind: 'group'; key: string; group: IGroup; managed: boolean }
@@ -28,7 +26,7 @@ export function MyGroupsTab() {
     if (managed.length > 0) {
       out.push({ kind: 'header', key: 'h-managed', title: 'Nhóm bạn quản lý' });
       managed.forEach((g) =>
-        out.push({ kind: 'group', key: `m-${g.id}`, group: g, managed: true }),
+        out.push({ kind: 'group', key: `m-${g.id}`, group: g, managed: true })
       );
     }
 
@@ -37,7 +35,7 @@ export function MyGroupsTab() {
       out.push({ kind: 'empty', key: 'e-joined', text: 'Bạn chưa tham gia nhóm nào.' });
     } else {
       member.forEach((g) =>
-        out.push({ kind: 'group', key: `j-${g.id}`, group: g, managed: false }),
+        out.push({ kind: 'group', key: `j-${g.id}`, group: g, managed: false })
       );
     }
 
@@ -51,7 +49,6 @@ export function MyGroupsTab() {
       refreshControl={<RefreshControl refreshing={loading} onRefresh={refetch} />}
       renderItem={({ item }) => {
         if (item.kind === 'header') {
-          // Cùng nền với dòng nhóm bên dưới để không tạo vệt phân cách.
           return (
             <View className="bg-card px-4 pb-1 pt-4">
               <Text className="font-semibold">{item.title}</Text>

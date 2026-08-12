@@ -1,4 +1,3 @@
-// Màn hình cửa sổ chat — port ý tưởng từ web (ChatWindow + MessageList + ChatInput).
 import { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -27,20 +26,28 @@ import { useAppSelector } from '@/store/hooks';
 import type { ChatMessage } from '@/types';
 import { useThemeColors } from '@/hooks/useTheme';
 
-// Ngắt gõ typing sau khoảng lặng.
 const TYPING_STOP_DELAY = 2000;
 
 export default function ChatScreen() {
   const colors = useThemeColors();
-  // Đảm bảo socket được kết nối ngay cả khi mở thẳng màn này.
+
   useSocketConnection();
 
   const { id } = useLocalSearchParams<{ id: string }>();
   const conversationId = Number(id);
   const router = useRouter();
 
-  const { chatInfo, messages, typingUsers, loading, loadingOlder, send, sendMedia, loadOlder, setTyping } =
-    useConversation(conversationId);
+  const {
+    chatInfo,
+    messages,
+    typingUsers,
+    loading,
+    loadingOlder,
+    send,
+    sendMedia,
+    loadOlder,
+    setTyping,
+  } = useConversation(conversationId);
   const userId = useAppSelector((r) => r.user.userId);
   const { startCall } = useWebRTC();
 
@@ -62,7 +69,7 @@ export default function ChatScreen() {
         setTyping(false);
       }, TYPING_STOP_DELAY);
     },
-    [setTyping],
+    [setTyping]
   );
 
   const stopTyping = useCallback(() => {
@@ -80,7 +87,6 @@ export default function ChatScreen() {
     stopTyping();
   };
 
-  // Chọn ảnh/file → upload Supabase → gửi từng media.
   const handlePickMedia = async () => {
     const picked = await pickMedia(5);
     if (!picked.length) return;
@@ -105,14 +111,12 @@ export default function ChatScreen() {
       ? chatInfo.members.find((m: any) => m.id !== userId) || chatInfo.members[0]
       : undefined;
 
-  // Chỉ hội thoại 1-1 mới hiển thị trạng thái của đối phương.
   const otherOnline = useIsUserOnline(otherMember?.id);
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Header */}
       <View className="flex-row items-center gap-3 border-b border-border px-4 py-2">
         <Button variant="ghost" className="h-auto p-1" onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color={colors.foreground} />
@@ -155,7 +159,6 @@ export default function ChatScreen() {
           onPress={() => router.push(`/chat-info/${conversationId}`)}>
           <Ionicons name="information-circle-outline" size={22} color={colors.foreground} />
         </Button>
-
       </View>
 
       <KeyboardAvoidingView
@@ -197,7 +200,6 @@ export default function ChatScreen() {
           </Text>
         )}
 
-        {/* Composer */}
         <View className="flex-row items-center gap-2 border-t border-border px-4 py-2">
           <Button
             variant="ghost"
@@ -220,7 +222,11 @@ export default function ChatScreen() {
             multiline
             onSubmitEditing={handleSend}
           />
-          <Button variant="ghost" className="h-auto p-2" disabled={!text.trim()} onPress={handleSend}>
+          <Button
+            variant="ghost"
+            className="h-auto p-2"
+            disabled={!text.trim()}
+            onPress={handleSend}>
             <Ionicons
               name="send"
               size={22}
@@ -237,7 +243,6 @@ function MessageBubble({ message, isOwn }: { message: ChatMessage; isOwn: boolea
   const colors = useThemeColors();
   const type = message.messageType ?? 'TEXT';
 
-  // Ảnh — hiển thị thumbnail.
   if (type === 'IMAGE') {
     const uri = resolveMediaUrl(message.content);
     return (
@@ -256,7 +261,6 @@ function MessageBubble({ message, isOwn }: { message: ChatMessage; isOwn: boolea
     );
   }
 
-  // File — mở link khi bấm.
   if (type === 'FILE') {
     const uri = resolveMediaUrl(message.content);
     const fileName = message.content.split('/').pop() ?? 'Tệp đính kèm';
@@ -269,11 +273,7 @@ function MessageBubble({ message, isOwn }: { message: ChatMessage; isOwn: boolea
               : 'max-w-[80%] flex-row items-center gap-2 rounded-2xl rounded-bl-sm bg-muted px-3 py-2'
           }
           onPress={() => uri && Linking.openURL(uri)}>
-          <Ionicons
-            name="document-outline"
-            size={20}
-            color={isOwn ? 'white' : colors.foreground}
-          />
+          <Ionicons name="document-outline" size={20} color={isOwn ? 'white' : colors.foreground} />
           <Text numberOfLines={1} className={isOwn ? 'text-primary-foreground' : 'text-foreground'}>
             {fileName}
           </Text>
@@ -285,7 +285,6 @@ function MessageBubble({ message, isOwn }: { message: ChatMessage; isOwn: boolea
     );
   }
 
-  // Nhật ký cuộc gọi.
   if (type === 'VIDEO_CALL' || type === 'AUDIO_CALL') {
     const label = type === 'VIDEO_CALL' ? 'Cuộc gọi video' : 'Cuộc gọi thoại';
     const duration = message.callDuration
@@ -308,7 +307,6 @@ function MessageBubble({ message, isOwn }: { message: ChatMessage; isOwn: boolea
     );
   }
 
-  // Văn bản.
   return (
     <View className={isOwn ? 'mb-2 items-end' : 'mb-2 items-start'}>
       <View

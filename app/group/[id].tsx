@@ -1,5 +1,3 @@
-// Màn hình chi tiết nhóm — port từ web (GroupDetail + GroupDetailHeader + GroupMembersTab).
-// Thứ tự tab: "Bài viết" (mặc định), "Giới thiệu" (privacy + preview thành viên + admin), "Thành viên".
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -38,7 +36,6 @@ const ROLE_ORDER: Record<IGroupMember['role'], number> = {
   MEMBER: 2,
 };
 
-// Số avatar hiển thị ở phần preview thành viên (giống web).
 const MAX_AVATAR_PREVIEW = 10;
 
 type Tab = 'posts' | 'about' | 'members';
@@ -50,15 +47,9 @@ export default function GroupDetailScreen() {
   const router = useRouter();
   const openProfile = useOpenProfile();
 
-  // Mở nhóm là vào thẳng bài viết — nội dung người dùng quan tâm nhất.
   const [tab, setTab] = useState<Tab>('posts');
   const { group, loading, setGroup, refetch: refetchGroup } = useGroupDetail(groupId);
-  const {
-    posts,
-    loadMore,
-    loading: postsLoading,
-    prependPost,
-  } = useSingleGroupPosts(groupId);
+  const { posts, loadMore, loading: postsLoading, prependPost } = useSingleGroupPosts(groupId);
   const { members, loading: membersLoading } = useGroupMembers(groupId);
   const { joinGroup, leaveGroup, loading: actionLoading } = useGroupActions();
   const { like, unlike, loadingId } = useLikePost();
@@ -76,10 +67,9 @@ export default function GroupDetailScreen() {
       if (!userId) return;
       post.hasLiked ? unlike(post.id, userId) : like(post.id, userId);
     },
-    [userId, like, unlike],
+    [userId, like, unlike]
   );
 
-  // Sau khi join/leave thì fetch lại chi tiết nhóm để header/quyền cập nhật (như web).
   const handleJoin = useCallback(async () => {
     if (!group) return;
     const ok = await joinGroup(group);
@@ -171,11 +161,15 @@ export default function GroupDetailScreen() {
     <View className="bg-card">
       <View>
         {coverUri ? (
-          <Image source={{ uri: coverUri }} style={{ width: '100%', height: 160 }} contentFit="cover" />
+          <Image
+            source={{ uri: coverUri }}
+            style={{ width: '100%', height: 160 }}
+            contentFit="cover"
+          />
         ) : (
           <View className="h-40 w-full bg-muted" />
         )}
-        {/* Nút đổi ảnh bìa — chỉ ADMIN */}
+
         {isAdmin && (
           <Button
             variant="secondary"
@@ -192,11 +186,14 @@ export default function GroupDetailScreen() {
         )}
       </View>
       <View className="gap-2 px-4 pb-4">
-        {/* Avatar nhóm — đè một phần lên ảnh bìa */}
         <View className="-mt-11 self-start">
           <View className="size-[88px] overflow-hidden rounded-full border-4 border-card bg-muted">
             {avatarUri ? (
-              <Image source={{ uri: avatarUri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+              <Image
+                source={{ uri: avatarUri }}
+                style={{ width: '100%', height: '100%' }}
+                contentFit="cover"
+              />
             ) : (
               <View className="flex-1 items-center justify-center bg-muted">
                 <Text className="text-3xl font-bold uppercase text-muted-foreground">
@@ -205,7 +202,7 @@ export default function GroupDetailScreen() {
               </View>
             )}
           </View>
-          {/* Nút đổi ảnh đại diện — chỉ ADMIN */}
+
           {isAdmin && (
             <Button
               variant="secondary"
@@ -233,7 +230,6 @@ export default function GroupDetailScreen() {
           </Text>
         </View>
 
-        {/* Như web: ADMIN không thấy nút tham gia / rời nhóm, thay vào đó là lối vào trang quản trị. */}
         {isAdmin ? (
           <Button variant="secondary" onPress={() => router.push(`/group/${groupId}/admin`)}>
             <Ionicons name="settings-outline" size={16} color={colors.foreground} />
@@ -255,7 +251,6 @@ export default function GroupDetailScreen() {
         )}
       </View>
 
-      {/* Tabs: Bài viết / Giới thiệu / Thành viên */}
       <View className="flex-row border-t border-border">
         {(
           [
@@ -270,7 +265,8 @@ export default function GroupDetailScreen() {
             accessibilityState={{ selected: tab === value }}
             className={`flex-1 items-center border-b-2 py-3 ${tab === value ? 'border-primary' : 'border-transparent'}`}
             onPress={() => setTab(value)}>
-            <Text className={tab === value ? 'font-semibold text-primary' : 'text-muted-foreground'}>
+            <Text
+              className={tab === value ? 'font-semibold text-primary' : 'text-muted-foreground'}>
               {label}
             </Text>
           </Pressable>
@@ -279,7 +275,6 @@ export default function GroupDetailScreen() {
     </View>
   );
 
-  // Tab "Giới thiệu" — mô tả quyền riêng tư + preview thành viên + quản trị viên (như web).
   const aboutSection = (
     <View className="gap-2 pb-4">
       <View className="gap-3 bg-card p-4">
@@ -326,7 +321,13 @@ export default function GroupDetailScreen() {
                 {uri ? (
                   <Image
                     source={{ uri }}
-                    style={{ width: 32, height: 32, borderRadius: 16, borderWidth: 2, borderColor: colors.card }}
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 16,
+                      borderWidth: 2,
+                      borderColor: colors.card,
+                    }}
                     contentFit="cover"
                   />
                 ) : (
@@ -373,7 +374,6 @@ export default function GroupDetailScreen() {
     <SafeAreaView className="flex-1 bg-muted" edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Back button overlay */}
       <View className="flex-row items-center gap-3 bg-card px-4 py-2">
         <Button
           variant="ghost"
@@ -416,16 +416,13 @@ export default function GroupDetailScreen() {
           ListHeaderComponent={
             <View>
               {header}
-              {tab === 'about' ? (
-                aboutSection
-              ) : (
-                // Ô tạo bài viết — chỉ khi đã tham gia nhóm (như web).
-                group.isJoined && (
-                  <View className="mb-2 mt-2">
-                    <GroupPostComposer groupId={groupId} onPostCreated={prependPost} />
-                  </View>
-                )
-              )}
+              {tab === 'about'
+                ? aboutSection
+                : group.isJoined && (
+                    <View className="mb-2 mt-2">
+                      <GroupPostComposer groupId={groupId} onPostCreated={prependPost} />
+                    </View>
+                  )}
             </View>
           }
           renderItem={({ item }) => (

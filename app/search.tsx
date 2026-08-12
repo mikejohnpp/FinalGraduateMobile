@@ -1,4 +1,3 @@
-// Màn hình tìm kiếm — port ý tưởng từ web (useSearch). Tìm người dùng + nhóm.
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,11 +6,7 @@ import { Stack, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
-import {
-  useSearch,
-  type GroupSearchResult,
-  type UserSearchResult,
-} from '@/hooks/useSearch';
+import { useSearch, type GroupSearchResult, type UserSearchResult } from '@/hooks/useSearch';
 import { resolveMediaUrl } from '@/lib/media';
 import { useThemeColors } from '@/hooks/useTheme';
 
@@ -30,7 +25,6 @@ export default function SearchScreen() {
     search(query);
   }, [query, search]);
 
-  // Gộp users + groups thành danh sách phẳng có header để render bằng 1 FlatList.
   const rows: Row[] = [];
   if (results?.users?.length) {
     rows.push({ kind: 'header', title: 'Mọi người' });
@@ -48,7 +42,6 @@ export default function SearchScreen() {
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Header với ô tìm kiếm */}
       <View className="flex-row items-center gap-2 border-b border-border px-3 py-2">
         <Button variant="ghost" className="h-auto p-1" onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color={colors.foreground} />
@@ -90,7 +83,7 @@ export default function SearchScreen() {
               </Text>
             );
           }
-if (item.kind === 'user') {
+          if (item.kind === 'user') {
             const u = item.data;
             const avatar = resolveMediaUrl(u.avatar);
             const name = u.nickName || u.name;

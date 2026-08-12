@@ -1,5 +1,3 @@
-// StoriesBar — thanh tin (story) ngang trên đầu feed. Port từ web (StoriesBar.tsx).
-// Bấm ô "Tạo tin" → điều hướng sang màn hình tạo tin; bấm ô story → mở viewer.
 import { FlatList, Pressable, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -41,7 +39,6 @@ function CreateStoryTile({ onPress }: { onPress: () => void }) {
   return (
     <Pressable onPress={onPress} className="active:opacity-80">
       <View className="h-40 w-24 overflow-hidden rounded-xl border border-border bg-card">
-        {/* Ảnh avatar user chiếm 3/4 thẻ */}
         <View className="h-3/4 w-full bg-muted">
           {avatarUri ? (
             <Image source={{ uri: avatarUri }} style={{ flex: 1 }} contentFit="cover" />
@@ -51,7 +48,7 @@ function CreateStoryTile({ onPress }: { onPress: () => void }) {
             </View>
           )}
         </View>
-        {/* Thanh dưới 1/4: icon + và chữ */}
+
         <View className="relative h-1/4 items-center justify-end bg-card pb-1.5">
           <View
             className="absolute -top-4 size-8 items-center justify-center rounded-full bg-primary"
@@ -93,7 +90,6 @@ function StoryTile({ group, onPress }: { group: IGroupedStory; onPress: () => vo
           </View>
         )}
 
-        {/* Gradient overlay */}
         <View
           className="absolute inset-0"
           style={{
@@ -106,7 +102,6 @@ function StoryTile({ group, onPress }: { group: IGroupedStory; onPress: () => vo
           />
         </View>
 
-        {/* Avatar tròn ở góc trên */}
         <View className="absolute left-2 top-2 size-9 items-center justify-center rounded-full border-2 border-primary bg-muted">
           {avatar ? (
             <Image source={{ uri: avatar }} style={{ width: 32, height: 32, borderRadius: 16 }} />
@@ -115,7 +110,6 @@ function StoryTile({ group, onPress }: { group: IGroupedStory; onPress: () => vo
           )}
         </View>
 
-        {/* Tên người dùng ở đáy */}
         <View className="absolute inset-x-0 bottom-0 px-1.5 py-1">
           <Text numberOfLines={1} className="text-xs font-semibold text-white">
             {group.user.username}

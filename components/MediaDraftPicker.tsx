@@ -1,5 +1,3 @@
-// MediaDraftPicker — nút chọn media + preview danh sách draft (ảnh/video) trước khi upload.
-// Port ý tưởng từ web (MediaPicker.tsx). Dùng cho màn tạo post & comment.
 import { Pressable, ScrollView, View } from 'react-native';
 import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -12,7 +10,7 @@ interface MediaDraftPickerProps {
   onPick: () => void;
   onRemove: (id: string) => void;
   disabled?: boolean;
-  // Kích cỡ nút — "icon" (chỉ icon, cho composer comment) hoặc "button" (nút đầy đủ).
+
   variant?: 'icon' | 'button';
 }
 
@@ -28,7 +26,10 @@ export default function MediaDraftPicker({
   return (
     <View className="gap-2">
       {drafts.length > 0 && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerClassName="gap-2">
           {drafts.map((d) => (
             <View key={d.id} style={{ width: 84, height: 84 }}>
               {d.mediaType === 'VIDEO' ? (

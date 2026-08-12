@@ -1,5 +1,3 @@
-// Màn hình hồ sơ cá nhân — port ý tưởng từ web (Profile + ProfileCover/About + ProfileTabs).
-// Bộ tab đồng bộ với web: Bài viết | Giới thiệu | Bạn bè | Reels.
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -38,7 +36,7 @@ export default function ProfileScreen() {
       if (!userId) return;
       post.hasLiked ? unlike(post.id, userId) : like(post.id, userId);
     },
-    [userId, like, unlike],
+    [userId, like, unlike]
   );
 
   const handlePickAvatar = useCallback(async () => {
@@ -76,10 +74,13 @@ export default function ProfileScreen() {
 
   const header = (
     <View>
-      {/* Cover */}
       <Pressable onPress={isOwner ? handlePickCover : undefined}>
         {coverUri ? (
-          <Image source={{ uri: coverUri }} style={{ width: '100%', height: 160 }} contentFit="cover" />
+          <Image
+            source={{ uri: coverUri }}
+            style={{ width: '100%', height: 160 }}
+            contentFit="cover"
+          />
         ) : (
           <View className="h-40 w-full items-center justify-center bg-muted">
             <Text className="text-5xl font-bold uppercase text-muted-foreground">
@@ -98,13 +99,18 @@ export default function ProfileScreen() {
         )}
       </Pressable>
 
-      {/* Avatar + name */}
       <View className="-mt-12 items-center px-4">
         <Pressable onPress={isOwner ? handlePickAvatar : undefined}>
           {avatarUri ? (
             <Image
               source={{ uri: avatarUri }}
-              style={{ width: 96, height: 96, borderRadius: 48, borderWidth: 3, borderColor: 'white' }}
+              style={{
+                width: 96,
+                height: 96,
+                borderRadius: 48,
+                borderWidth: 3,
+                borderColor: 'white',
+              }}
               contentFit="cover"
             />
           ) : (
@@ -133,7 +139,7 @@ export default function ProfileScreen() {
             {profile.bio}
           </Text>
         )}
-        {/* Bấm số bạn bè để sang tab "Bạn bè" — giống web */}
+
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Xem danh sách bạn bè"
@@ -159,8 +165,6 @@ export default function ProfileScreen() {
         <ProfileTabsBar activeTab={activeTab} onTabChange={setActiveTab} />
       </View>
 
-      {/* Tab "Bài viết" của web hiển thị kèm khối Giới thiệu + Bạn bè ở cột trái;
-          trên mobile xếp dọc phía trên danh sách bài viết. */}
       {activeTab === 'posts' && (
         <>
           <ProfileAboutCard profile={profile} />

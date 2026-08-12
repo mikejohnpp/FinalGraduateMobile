@@ -1,5 +1,3 @@
-// Yêu cầu tham gia nhóm (ADMIN) — port từ web (views/groups/admin/MemberRequests.tsx).
-// Có tìm kiếm theo tên, sắp xếp mới/cũ nhất và lọc theo giới tính (BE xử lý qua query params).
 import { useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -42,14 +40,12 @@ export default function GroupAdminMemberRequestsScreen() {
     setGenderFilter,
   } = useGroupMemberRequests(id);
 
-  // Input cục bộ để không gọi API mỗi ký tự — submit mới áp dụng (giống hành vi nút Tìm của web).
   const [searchInput, setSearchInput] = useState(searchQuery);
 
   const renderItem = ({ item }: { item: IGroupAdminMember }) => {
     const avatarUri = resolveMediaUrl(item.avatarUrl);
     return (
       <View className="mb-3 rounded-xl border border-border bg-card p-4 shadow-sm">
-        {/* Avatar + tên bấm được để xem hồ sơ người xin vào nhóm */}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Xem hồ sơ của ${item.username}`}
@@ -91,7 +87,6 @@ export default function GroupAdminMemberRequestsScreen() {
 
   const filters = (
     <View className="mb-3 gap-3">
-      {/* Tìm kiếm theo tên */}
       <View className="flex-row items-center gap-2 rounded-lg border border-border bg-card px-3">
         <Ionicons name="search" size={18} color={colors.mutedForeground} />
         <TextInput
@@ -118,7 +113,6 @@ export default function GroupAdminMemberRequestsScreen() {
         )}
       </View>
 
-      {/* Sắp xếp theo thời gian gửi yêu cầu */}
       <View className="flex-row gap-2">
         {(
           [
@@ -140,7 +134,6 @@ export default function GroupAdminMemberRequestsScreen() {
         ))}
       </View>
 
-      {/* Lọc theo giới tính */}
       <View className="flex-row gap-2">
         {GENDER_OPTIONS.map(({ value, label }) => (
           <Button
@@ -163,7 +156,6 @@ export default function GroupAdminMemberRequestsScreen() {
     <SafeAreaView className="flex-1 bg-muted" edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Header */}
       <View className="flex-row items-center gap-3 border-b border-border bg-card px-4 py-2">
         <Button
           variant="ghost"

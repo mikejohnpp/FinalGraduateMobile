@@ -1,6 +1,3 @@
-// GroupCard — thẻ một nhóm với ảnh bìa, tên, số thành viên và nút hành động.
-// Đồng bộ hành vi với web (GroupCard.tsx): ADMIN thấy nút "Quản lý" thay cho tham gia/rời nhóm,
-// và hiển thị số bạn bè cùng nhóm khi có.
 import { View } from 'react-native';
 import { Image } from 'expo-image';
 import { Button } from '@/components/ui/button';
@@ -33,9 +30,12 @@ export function GroupCard({
     <View className="overflow-hidden rounded-xl bg-card">
       <Button variant="ghost" className="h-auto flex-col items-stretch p-0" onPress={onPress}>
         {coverUri ? (
-          <Image source={{ uri: coverUri }} style={{ width: '100%', height: 120 }} contentFit="cover" />
+          <Image
+            source={{ uri: coverUri }}
+            style={{ width: '100%', height: 120 }}
+            contentFit="cover"
+          />
         ) : (
-          // Nền tint primary để phân biệt rõ với nền trang (muted trùng tông với background).
           <View className="h-[120px] w-full items-center justify-center bg-primary/10">
             <Text className="text-4xl font-bold uppercase text-primary">
               {group.name?.charAt(0) || '?'}
@@ -49,7 +49,7 @@ export function GroupCard({
           <Text variant="muted" className="text-xs">
             {privacyLabel} · {group.memberCount} thành viên
           </Text>
-          {/* Bạn bè cùng nhóm — như web, chỉ hiện khi > 0 */}
+
           {group.mutualFriendCount > 0 && (
             <Text variant="muted" className="text-xs">
               {group.mutualFriendCount} bạn bè là thành viên

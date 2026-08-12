@@ -1,6 +1,3 @@
-// ProfileFriendsCard — khối "Bạn bè" trong hồ sơ, port từ web (ProfileFriends.tsx).
-// Lấy bạn bè của CHỦ HỒ SƠ (không phải của người đang đăng nhập) qua
-// GET users/friends?userId={profileId}&size={size}, hiển thị lưới 3 cột avatar + tên.
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 import { Image } from 'expo-image';
@@ -14,9 +11,9 @@ import type { CursorPageResponse, IAuthor, IFriendship } from '@/types';
 interface ProfileFriendsCardProps {
   profileUserId: number;
   friendCount: number;
-  /** Số bạn bè tải về. Web dùng 6 cho khối xem trước; tab "Bạn bè" hiển thị nhiều hơn. */
+
   size?: number;
-  /** Bấm "Xem tất cả bạn bè" — thường là chuyển sang tab "Bạn bè". */
+
   onViewAll?: () => void;
 }
 
@@ -43,7 +40,7 @@ export function ProfileFriendsCard({
         const result = await friendService.getSingle<CursorPageResponse<IFriendship>>(
           API.FRIEND.BASE,
           undefined,
-          { userId: profileUserId, size },
+          { userId: profileUserId, size }
         );
         if (!cancelled) {
           setFriends(result?.data?.map((f) => f.user) ?? []);
@@ -70,14 +67,13 @@ export function ProfileFriendsCard({
       const result = await friendService.getSingle<CursorPageResponse<IFriendship>>(
         API.FRIEND.BASE,
         undefined,
-        { userId: profileUserId, size, cursor: nextCursor },
+        { userId: profileUserId, size, cursor: nextCursor }
       );
       const newFriends = result?.data?.map((f) => f.user) ?? [];
       setFriends((prev) => [...prev, ...newFriends]);
       setNextCursor(result?.nextCursor ?? null);
       setHasMore(Boolean(result?.hasMore));
     } catch {
-      // giữ nguyên danh sách hiện tại nếu lỗi
     } finally {
       setLoadingMore(false);
     }
@@ -114,18 +110,20 @@ export function ProfileFriendsCard({
       ) : (
         <View className="-mx-1 mt-3 flex-row flex-wrap">
           {friends.map((friend) => (
-            <FriendMiniCard key={friend.id} friend={friend} onPress={() => openProfile(friend.id)} />
+            <FriendMiniCard
+              key={friend.id}
+              friend={friend}
+              onPress={() => openProfile(friend.id)}
+            />
           ))}
         </View>
       )}
 
-      {/* Nút tải thêm — chỉ hiện khi ở chế độ xem đầy đủ (không phải preview) */}
       {!onViewAll && hasMore && (
         <Pressable
           className="mt-3 items-center py-2 active:opacity-70"
           onPress={handleLoadMore}
-          disabled={loadingMore}
-        >
+          disabled={loadingMore}>
           {loadingMore ? (
             <ActivityIndicator size="small" />
           ) : (
@@ -137,7 +135,6 @@ export function ProfileFriendsCard({
   );
 }
 
-// Ô bạn bè: ảnh vuông + tên, bấm để mở hồ sơ — giống FriendMiniCard của web.
 function FriendMiniCard({ friend, onPress }: { friend: IAuthor; onPress: () => void }) {
   const avatarUri = resolveMediaUrl(friend.avatar);
   const displayName = friend.nickName || friend.name;

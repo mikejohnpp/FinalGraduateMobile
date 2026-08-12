@@ -1,7 +1,3 @@
-// Màn hình chỉnh sửa hồ sơ — port từ web (ProfileEditPanel + EditableRow).
-// Giữ đúng luồng của web: mỗi trường sửa inline, khi một trường đang mở thì các
-// trường khác bị khoá, và chỉ gọi API một lần khi bấm "Xác nhận & Lưu thay đổi".
-// Khác web: panel nổi → màn hình riêng (expo-router), Textarea → TextInput multiline.
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,10 +10,8 @@ import { useCurrentProfile, useUpdateProfile } from '@/hooks/useProfile';
 import { useThemeColors } from '@/hooks/useTheme';
 import type { IProfileUpdate, UserProfileDTO } from '@/types';
 
-// Giới hạn ký tự của phần giới thiệu — giống web (maxLength 101).
 const BIO_MAX_LENGTH = 101;
 
-// Đổ profile vào draft — các trường null trở thành chuỗi rỗng như web.
 function toDraft(profile: UserProfileDTO | null | undefined): IProfileUpdate {
   return {
     userName: profile?.userName ?? '',
@@ -35,25 +29,20 @@ function toDraft(profile: UserProfileDTO | null | undefined): IProfileUpdate {
   };
 }
 
-
 export default function EditProfileScreen() {
   const colors = useThemeColors();
   const router = useRouter();
   const { profile } = useCurrentProfile();
   const { update, loading } = useUpdateProfile();
 
-  // Trường đang được mở để sửa; null = không có trường nào.
   const [activeField, setActiveField] = useState<string | null>(null);
   const [draft, setDraft] = useState<IProfileUpdate>(() => toDraft(profile));
 
-  // Web luôn có profile khi mở panel; mobile mở màn hình riêng nên profile có thể
-  // về sau (fetch async). Nạp draft đúng một lần khi profile đầu tiên xuất hiện.
   const [hydratedId, setHydratedId] = useState<number | null>(profile?.id ?? null);
   if (profile && profile.id !== hydratedId) {
     setHydratedId(profile.id);
     setDraft(toDraft(profile));
   }
-
 
   const handleEdit = (field: string) => {
     if (activeField !== null) return;
@@ -62,7 +51,6 @@ export default function EditProfileScreen() {
 
   const handleCancel = () => setActiveField(null);
 
-  // Lưu vào draft (chưa gọi API) rồi đóng trường đang sửa — giống web.
   const handleSaveField = (field: string, value: string) => {
     setDraft((prev) => ({ ...prev, [field]: value }));
     setActiveField(null);
@@ -73,7 +61,6 @@ export default function EditProfileScreen() {
     if (result) router.back();
   };
 
-  // Helper để bớt lặp props cho từng hàng.
   const rowProps = (field: keyof IProfileUpdate) => ({
     field,
     value: draft[field] as string | undefined,
@@ -85,10 +72,9 @@ export default function EditProfileScreen() {
   });
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Header */}
       <View className="flex-row items-center gap-2 border-b border-border px-2 py-3">
         <Button
           variant="ghost"
@@ -106,7 +92,6 @@ export default function EditProfileScreen() {
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerClassName="p-4 pb-8" keyboardShouldPersistTaps="handled">
-          {/* Nhóm: Tên hiển thị */}
           <SectionTitle>Tên hiển thị</SectionTitle>
           <View className="mb-5 gap-1">
             <EditableRow
@@ -123,7 +108,6 @@ export default function EditProfileScreen() {
             />
           </View>
 
-          {/* Nhóm: Giới thiệu (bio dùng ô nhiều dòng + đếm ký tự) */}
           <SectionTitle>Giới thiệu</SectionTitle>
           <View className="mb-5">
             {activeField === 'bio' ? (
@@ -179,7 +163,6 @@ export default function EditProfileScreen() {
             )}
           </View>
 
-          {/* Nhóm: Thông tin cá nhân */}
           <SectionTitle>Thông tin cá nhân</SectionTitle>
           <View className="gap-1">
             <EditableRow
@@ -240,7 +223,6 @@ export default function EditProfileScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Footer: chỉ lưu khi không còn trường nào đang mở — giống web */}
       <View className="border-t border-border bg-muted/20 p-4">
         <Button disabled={activeField !== null || loading} onPress={handleFinalSave}>
           <Text className="text-primary-foreground">

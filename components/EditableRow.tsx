@@ -1,6 +1,3 @@
-// EditableRow — port từ web (src/components/profile/EditableRow.tsx).
-// Mỗi hàng có 2 trạng thái: xem (bấm để sửa) và đang sửa (input + Hủy/Lưu).
-// Khi một hàng khác đang sửa thì hàng này bị "khoá" (isLocked) — giống web.
 import * as React from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -19,7 +16,7 @@ export interface EditableRowProps {
   onEdit: (field: string) => void;
   onSave: (field: string, value: string) => void;
   onCancel: () => void;
-  /** Bàn phím số cho các trường như ngày sinh. */
+
   keyboardType?: 'default' | 'numeric';
 }
 
@@ -40,8 +37,6 @@ export function EditableRow({
   const [localValue, setLocalValue] = React.useState(value ?? '');
   const [wasActive, setWasActive] = React.useState(isActive);
 
-  // Reset localValue từ value mỗi khi hàng chuyển sang chế độ sửa.
-  // Pattern "điều chỉnh state khi render" của React, tránh lệch giá trị mà không cần useEffect.
   if (isActive !== wasActive) {
     setWasActive(isActive);
     if (isActive) {

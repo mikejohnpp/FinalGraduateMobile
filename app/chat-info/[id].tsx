@@ -1,14 +1,5 @@
-// Màn thông tin hội thoại — port ý tưởng từ web (InfoPanel + MediaManagerConversation + AddMemberDialog).
-// Gồm: danh sách thành viên, thêm thành viên (nhóm), quản lý ảnh/file đã chia sẻ.
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Linking,
-  Modal,
-  Pressable,
-  View,
-} from 'react-native';
+import { ActivityIndicator, FlatList, Linking, Modal, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
@@ -32,7 +23,6 @@ export default function ChatInfoScreen() {
   const router = useRouter();
   const openProfile = useOpenProfile();
   const userId = useAppSelector((r) => r.user.userId);
-
 
   const [detail, setDetail] = useState<MessageChat | null>(null);
   const [media, setMedia] = useState<ChatMessage[]>([]);
@@ -77,10 +67,9 @@ export default function ChatInfoScreen() {
   const title = detail?.conversationName ?? 'Thông tin';
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Header */}
       <View className="flex-row items-center gap-2 border-b border-border px-4 py-2">
         <Button variant="ghost" className="h-auto p-1" onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color={colors.foreground} />
@@ -94,15 +83,12 @@ export default function ChatInfoScreen() {
         data={tab === 'IMAGE' ? images : files}
         keyExtractor={(item) => String(item.id)}
         numColumns={tab === 'IMAGE' ? 3 : 1}
-        key={tab} // ép remount khi đổi số cột
+        key={tab}
         ListHeaderComponent={
           <View>
-            {/* Thành viên */}
             <View className="px-4 pt-4">
               <View className="mb-2 flex-row items-center justify-between">
-                <Text variant="large">
-                  Thành viên{isGroup ? ` (${members.length})` : ''}
-                </Text>
+                <Text variant="large">Thành viên{isGroup ? ` (${members.length})` : ''}</Text>
                 {isGroup && (
                   <Button variant="ghost" className="h-auto p-1" onPress={() => setAddOpen(true)}>
                     <View className="flex-row items-center gap-1">
@@ -141,22 +127,26 @@ export default function ChatInfoScreen() {
                   </Pressable>
                 );
               })}
-
             </View>
 
-            {/* Tabs media */}
             <View className="mt-4 flex-row border-b border-border px-4">
               <Pressable
                 className={`mr-4 border-b-2 pb-2 ${tab === 'IMAGE' ? 'border-primary' : 'border-transparent'}`}
                 onPress={() => setTab('IMAGE')}>
-                <Text className={tab === 'IMAGE' ? 'font-semibold text-primary' : 'text-muted-foreground'}>
+                <Text
+                  className={
+                    tab === 'IMAGE' ? 'font-semibold text-primary' : 'text-muted-foreground'
+                  }>
                   Ảnh ({images.length})
                 </Text>
               </Pressable>
               <Pressable
                 className={`border-b-2 pb-2 ${tab === 'FILE' ? 'border-primary' : 'border-transparent'}`}
                 onPress={() => setTab('FILE')}>
-                <Text className={tab === 'FILE' ? 'font-semibold text-primary' : 'text-muted-foreground'}>
+                <Text
+                  className={
+                    tab === 'FILE' ? 'font-semibold text-primary' : 'text-muted-foreground'
+                  }>
                   Tệp ({files.length})
                 </Text>
               </Pressable>
@@ -218,7 +208,6 @@ export default function ChatInfoScreen() {
   );
 }
 
-// Modal chọn bạn bè để thêm vào nhóm chat.
 function AddMemberModal({
   visible,
   onClose,
@@ -333,7 +322,7 @@ function AddMemberModal({
                 );
               }}
               ListEmptyComponent={
-                <View className="py-10 items-center">
+                <View className="items-center py-10">
                   <Text variant="muted">Không có bạn bè nào để thêm.</Text>
                 </View>
               }

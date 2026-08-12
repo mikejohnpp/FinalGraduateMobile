@@ -1,4 +1,3 @@
-// Redux store — port từ web (src/stores/store.ts).
 import { configureStore } from '@reduxjs/toolkit';
 import userReducer from '@/store/userSlice';
 import postReducer from '@/store/postSlice';
@@ -12,18 +11,18 @@ import reelReducer from '@/store/reelSlice';
 import userOnlineReducer from '@/store/userOnlineSlice';
 
 export const store = configureStore({
-    reducer: {
-        user: userReducer,
-        post: postReducer,
-        comment: commentReducer,
-        friend: friendReducer,
-        group: groupReducer,
-        chat: chatReducer,
-        notification: notificationReducer,
-        story: storyReducer,
-        reel: reelReducer,
-        userOnline: userOnlineReducer,
-    },
+  reducer: {
+    user: userReducer,
+    post: postReducer,
+    comment: commentReducer,
+    friend: friendReducer,
+    group: groupReducer,
+    chat: chatReducer,
+    notification: notificationReducer,
+    story: storyReducer,
+    reel: reelReducer,
+    userOnline: userOnlineReducer,
+  },
 });
 
 export type RootState = ReturnType<typeof store.getState>;

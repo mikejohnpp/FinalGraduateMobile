@@ -1,4 +1,3 @@
-// FriendRow — một hàng người dùng với avatar, tên, số bạn chung và các nút hành động.
 import { Pressable, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Button } from '@/components/ui/button';
@@ -32,7 +31,6 @@ export function FriendRow({
 
   return (
     <View className="flex-row items-center gap-3 bg-card px-4 py-3">
-      {/* Avatar + tên bấm được để mở hồ sơ; các nút hành động giữ nguyên vùng bấm riêng */}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Xem hồ sơ của ${displayName}`}

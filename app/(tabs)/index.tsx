@@ -1,4 +1,3 @@
-// Màn hình Feed (bảng tin) — port từ web (src/views/home/Home.tsx + NewsFeed).
 import { useCallback } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,8 +13,6 @@ import { useThemeColors } from '@/hooks/useTheme';
 import { useAppSelector } from '@/store/hooks';
 import type { IPost } from '@/types';
 
-
-
 export default function FeedScreen() {
   const { posts, loadMore, refresh, loading, refreshing } = useSuggestedFeed();
   const { like, unlike, loadingId } = useLikePost();
@@ -24,26 +21,23 @@ export default function FeedScreen() {
   const colors = useThemeColors();
   const router = useRouter();
 
-
-
   const handleToggleLike = useCallback(
     (post: IPost) => {
       if (!userId) return;
       post.hasLiked ? unlike(post.id, userId) : like(post.id, userId);
     },
-    [userId, like, unlike],
+    [userId, like, unlike]
   );
 
   const handleComment = useCallback(
     (post: IPost) => {
       router.push(`/post/${post.id}`);
     },
-    [router],
+    [router]
   );
 
   return (
     <SafeAreaView className="flex-1 bg-muted" edges={['top']}>
-      {/* Header — logo + lối tắt tìm kiếm, tạo bài, tin nhắn */}
       <View className="flex-row items-center justify-between bg-card px-4 py-3">
         <Image
           source={require('@/assets/logo.svg')}
@@ -83,9 +77,7 @@ export default function FeedScreen() {
             className="size-9 items-center justify-center rounded-full bg-muted active:opacity-70"
             onPress={() => router.push('/(tabs)/messages')}>
             <Ionicons name="chatbubble-ellipses-outline" size={20} color={colors.foreground} />
-
           </Pressable>
-
         </View>
       </View>
 

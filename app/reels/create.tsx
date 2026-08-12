@@ -1,5 +1,3 @@
-// Màn hình tạo Reel — port từ web (src/views/profile/partials/CreateReelModal.tsx).
-// Chọn 1 video từ thư viện, thêm chú thích (tuỳ chọn) rồi đăng.
 import { useState } from 'react';
 
 import {
@@ -46,11 +44,10 @@ export default function CreateReelScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        {/* Header */}
         <View className="flex-row items-center gap-3 border-b border-border px-4 py-3">
           <Pressable
             onPress={() => router.back()}
@@ -63,13 +60,11 @@ export default function CreateReelScreen() {
         <ScrollView
           contentContainerClassName="flex-grow p-4 gap-4"
           keyboardShouldPersistTaps="handled">
-          {/* Vùng chọn / xem trước video */}
           {videoUri ? (
             <View className="h-96 overflow-hidden rounded-2xl bg-black">
               <VideoPreview uri={videoUri} />
             </View>
           ) : (
-
             <Pressable
               onPress={handlePick}
               className="h-96 items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted active:opacity-70">
@@ -102,7 +97,9 @@ export default function CreateReelScreen() {
             disabled={!videoUri || loading}
             onPress={handleSubmit}>
             {loading && <ActivityIndicator size="small" color={colors.primaryForeground} />}
-            <Text className="text-primary-foreground">{loading ? 'Đang đăng...' : 'Đăng Reel'}</Text>
+            <Text className="text-primary-foreground">
+              {loading ? 'Đang đăng...' : 'Đăng Reel'}
+            </Text>
           </Button>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -110,13 +107,9 @@ export default function CreateReelScreen() {
   );
 }
 
-// Xem trước video đã chọn bằng expo-video, có điều khiển gốc, lặp lại.
 function VideoPreview({ uri }: { uri: string }) {
   const player = useVideoPlayer(uri, (p) => {
     p.loop = true;
   });
-  return (
-    <VideoView player={player} style={{ flex: 1 }} contentFit="contain" nativeControls />
-  );
+  return <VideoView player={player} style={{ flex: 1 }} contentFit="contain" nativeControls />;
 }
-

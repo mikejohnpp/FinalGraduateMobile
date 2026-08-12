@@ -1,5 +1,3 @@
-// Màn hình tạo tin (Story) — port từ web (src/views/story/CreateStory.tsx).
-// Hỗ trợ 3 loại: text (màu nền + chữ), image (ảnh + chú thích), video.
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -82,7 +80,6 @@ export default function CreateStoryScreen() {
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        {/* Header */}
         <View className="flex-row items-center gap-3 border-b border-border px-4 py-3">
           <Pressable
             onPress={handleBack}
@@ -92,7 +89,9 @@ export default function CreateStoryScreen() {
           <Text variant="large">{storyType === null ? 'Tạo tin' : 'Xem trước'}</Text>
         </View>
 
-        <ScrollView contentContainerClassName="flex-grow p-4 gap-4" keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerClassName="flex-grow p-4 gap-4"
+          keyboardShouldPersistTaps="handled">
           {storyType === null && (
             <View className="gap-3">
               <Text variant="muted">Chọn loại tin muốn tạo</Text>
@@ -120,7 +119,6 @@ export default function CreateStoryScreen() {
 
           {storyType === 'text' && (
             <View className="gap-4">
-              {/* Preview */}
               <View
                 className="h-80 items-center justify-center rounded-2xl p-6"
                 style={{ backgroundColor: selectedBg }}>
@@ -140,7 +138,6 @@ export default function CreateStoryScreen() {
                 autoFocus
               />
 
-              {/* Bảng màu */}
               <View>
                 <Text variant="muted" className="mb-2">
                   Màu nền

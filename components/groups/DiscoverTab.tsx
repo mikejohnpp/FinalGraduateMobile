@@ -1,6 +1,12 @@
-// Tab "Khám phá" — nhóm gợi ý, có tìm theo tên (lọc client trên danh sách gợi ý).
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, TextInput, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  TextInput,
+  View,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { GroupCard } from '@/components/GroupCard';

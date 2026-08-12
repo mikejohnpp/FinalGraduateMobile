@@ -25,15 +25,11 @@ function RootNavigator() {
     if (!hydrated) return;
 
     const inAuthGroup =
-      segments[0] === 'login' ||
-      segments[0] === 'register' ||
-      segments[0] === 'forgot-password';
+      segments[0] === 'login' || segments[0] === 'register' || segments[0] === 'forgot-password';
 
     if (!isLoggedIn && !inAuthGroup) {
-      // Chưa đăng nhập → về Login
       router.replace('/login');
     } else if (isLoggedIn && inAuthGroup) {
-      // Đã đăng nhập mà còn ở màn auth → vào tabs
       router.replace('/(tabs)');
     }
   }, [hydrated, isLoggedIn, segments, router]);
@@ -55,7 +51,6 @@ function RootNavigator() {
   );
 }
 
-
 export default function RootLayout() {
   return (
     <Provider store={store}>
@@ -67,13 +62,12 @@ export default function RootLayout() {
               <StatusBar style="auto" />
               <PortalHost />
               <CallModal />
-              {/* Banner tin nhắn mới — đặt cuối để nổi trên mọi màn hình. */}
+
               <MessageNotificationBanner />
             </SafeAreaProvider>
           </MessageNotificationProvider>
         </CallProvider>
       </ThemeProvider>
     </Provider>
-
   );
 }

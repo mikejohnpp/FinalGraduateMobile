@@ -1,4 +1,3 @@
-// Màn hình cài đặt — hiển thị thông tin tài khoản + chọn giao diện + đăng xuất.
 import { Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -7,12 +6,15 @@ import { Text } from '@/components/ui/text';
 import { useLogoutUser, useUserProfile } from '@/hooks/useUser';
 import { useTheme, useThemeColors, type ThemePreference } from '@/hooks/useTheme';
 
-const THEME_OPTIONS: { value: ThemePreference; label: string; icon: keyof typeof Ionicons.glyphMap }[] =
-  [
-    { value: 'light', label: 'Sáng', icon: 'sunny-outline' },
-    { value: 'dark', label: 'Tối', icon: 'moon-outline' },
-    { value: 'system', label: 'Hệ thống', icon: 'phone-portrait-outline' },
-  ];
+const THEME_OPTIONS: {
+  value: ThemePreference;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+}[] = [
+  { value: 'light', label: 'Sáng', icon: 'sunny-outline' },
+  { value: 'dark', label: 'Tối', icon: 'moon-outline' },
+  { value: 'system', label: 'Hệ thống', icon: 'phone-portrait-outline' },
+];
 
 export default function SettingsScreen() {
   const { logout, isLoading } = useLogoutUser();
@@ -30,7 +32,6 @@ export default function SettingsScreen() {
           <Text variant="muted">Tài khoản và tuỳ chọn ứng dụng</Text>
         </View>
 
-        {/* Thông tin tài khoản */}
         {profile && (
           <View className="rounded-lg border border-border bg-card p-4">
             <Text variant="large">{profile.nickName || profile.userName}</Text>
@@ -38,7 +39,6 @@ export default function SettingsScreen() {
           </View>
         )}
 
-        {/* Chọn giao diện sáng/tối */}
         <View className="gap-2">
           <Text variant="large">Giao diện</Text>
           <View className="flex-row gap-2">
@@ -52,7 +52,6 @@ export default function SettingsScreen() {
                   style={{
                     borderColor: active ? colors.primary : colors.border,
                   }}>
-
                   <Ionicons
                     name={opt.icon}
                     size={22}

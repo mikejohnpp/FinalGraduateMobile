@@ -1,7 +1,3 @@
-// GroupPostComposer — ô tạo bài viết trong nhóm.
-// Port từ web (components/home/CreatePostCard.tsx dùng với prop groupId):
-// gửi kèm { groupId, isGroupPosted: true }; nếu BE trả status PENDING thì bài chờ duyệt
-// (không prepend vào danh sách), ngược lại prepend ngay như web.
 import { useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { Image } from 'expo-image';
@@ -49,7 +45,6 @@ export function GroupPostComposer({ groupId, onPostCreated }: GroupPostComposerP
   const handleSubmit = async () => {
     if (!canSubmit || !userId) return;
 
-    // Upload media lên storage trước, lấy URL rồi đính vào body (giống web).
     const media = await upload();
     if (media === null) return;
 
@@ -108,7 +103,11 @@ export function GroupPostComposer({ groupId, onPostCreated }: GroupPostComposerP
               <Ionicons name="close" size={24} color={colors.foreground} />
             </Button>
             <Text variant="large">Tạo bài viết</Text>
-            <Button variant="ghost" className="h-auto p-1" disabled={!canSubmit} onPress={handleSubmit}>
+            <Button
+              variant="ghost"
+              className="h-auto p-1"
+              disabled={!canSubmit}
+              onPress={handleSubmit}>
               <Text className={canSubmit ? 'font-semibold text-primary' : 'text-muted-foreground'}>
                 {uploading ? 'Đang tải...' : loading ? 'Đang đăng...' : 'Đăng'}
               </Text>
